@@ -1,0 +1,33 @@
+{
+  "windows": {
+      "database_path": "D:\\ADwithAE"
+  },
+  "linux": {
+      "database_path": "/path/to/linux"
+  },
+
+  "bkg_files": [
+    {
+      "type": "SM",
+      "file": "background_for_training.h5"
+    }
+  ],
+  "sig_files": [
+    {
+      "type": "A -> 4 leptons",
+      "file": "Ato4l_lepFilter_13TeV_filtered.h5"
+    },
+    {
+      "type": "LQ -> b tau",
+      "file": "leptoquark_LOWMASS_lepFilter_13TeV_filtered.h5"
+    },
+    {
+      "type": "h^0 -> tau tau",
+      "file": "hToTauTau_13TeV_PU20_filtered.h5"
+    },
+    {
+      "type": "h+ -> tau nu",
+      "file": "hChToTauNu_13TeV_PU20_filtered.h5"
+    }
+  ]
+}
