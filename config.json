@@ -3,7 +3,7 @@
       "database_path": "D:\\ADwithAE"
   },
   "linux": {
-      "database_path": "/path/to/linux"
+      "database_path": "/home/desmondhe/Windows_D/ADwithAE"
   },
 
   "bkg_files": [
