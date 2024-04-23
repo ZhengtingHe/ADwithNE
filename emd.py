@@ -59,11 +59,11 @@ def emd_pot(source_event, target_event, norm=False, R=1.0, return_flow=False, n_
     # # Psuedorapidity-azimuth distance matrix
     # dist_matrix = cdist(source_coords, target_coords, 'euclidean')
 
-    _, cost, flow, _, result_code = emd_c(source_pTs/rescale, target_pTs/rescale, thetas, n_iter_max, True)
+    flow_matrix, cost, _, _, result_code = emd_c(source_pTs/rescale, target_pTs/rescale, thetas, n_iter_max, True)
     check_result(result_code)
 
     if return_flow:
-        return cost, flow
+        return cost * rescale, flow_matrix * rescale
     else:
         return cost
 
