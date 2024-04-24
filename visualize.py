@@ -16,7 +16,7 @@ def create_eta_phi_plane():
     plt.grid(True)
 
 
-def create_legent():
+def create_legend():
     legend = plt.legend(loc="lower left", scatterpoints=1, fontsize=10)
     for handle in legend.legend_handles:
         handle.set_sizes([30.0])
@@ -54,17 +54,15 @@ def plot_constituents(event, state='source'):
                 plt.text(eta, phi, "{:.2f}".format(pt))
 
 
-
-
 def plot_event_cloud(event):
     # Plot single event in the eta-phi plane
     create_eta_phi_plane()
     plot_constituents(event, state='')
-    create_legent()
+    create_legend()
     plt.show()
 
 
-def plot_optimal_transport(source_event, target_event, flow_matrix, emd):
+def plot_optimal_transport(source_event, target_event, flow_matrix, emd, verbose=False):
     create_eta_phi_plane()
     # Plot source and target distributions
     plot_constituents(source_event, state='source')
@@ -89,14 +87,19 @@ def plot_optimal_transport(source_event, target_event, flow_matrix, emd):
     # Plot arrows between source and target particles
     sending_coords = source_coords[index_send]
     receiving_coords = target_coords[index_receive]
-    for receiving_coord, sending_coord in zip(receiving_coords, sending_coords):
-        print("From: ", sending_coord, "To: ", receiving_coord)
+    for i, (receiving_coord, sending_coord) in enumerate(zip(receiving_coords, sending_coords)):
+        flow = flow_matrix[index_send[i], index_receive[i]]
+
         plt.arrow(sending_coord[0], sending_coord[1],  # arrow base
                   receiving_coord[0] - sending_coord[0], receiving_coord[1] - sending_coord[1],
-                  head_width=0.1, fc='#FFD700', ec='#FFD700')  # arrow span
+                  head_width=0.2, head_length=0.2, shape='left',
+                  fc='#FFD700', ec='#FFD700')  # arrow span
 
-    create_legent()
-    plt.title(f'EMD: {emd:.2f}')
+        if verbose:
+            print(f'From: {np.round(sending_coord,2)} to {np.round(receiving_coord,2)} with flow {flow:.2f}')
+
+    create_legend()
+    plt.title(f'EMD: {emd:.2f}, Total flow: {len(index_send)}')
     plt.show()
 
 
