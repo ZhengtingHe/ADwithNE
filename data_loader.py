@@ -3,6 +3,7 @@ import sys
 import h5py
 import os
 import pandas as pd
+import numpy as np
 
 
 def load_config():
@@ -27,5 +28,5 @@ def get_h5_files():
 
 
 def read_h5_file(path, file_name):
-    return h5py.File(os.path.join(path, file_name), 'r')
+    return np.array(h5py.File(os.path.join(path, file_name), 'r')['Particles'])
 
