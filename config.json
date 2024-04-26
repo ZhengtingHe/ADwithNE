@@ -14,19 +14,19 @@
   ],
   "sig_files": [
     {
-      "type": "A -> 4 leptons",
+      "type": "A->4_leptons",
       "file": "Ato4l_lepFilter_13TeV_filtered.h5"
     },
     {
-      "type": "LQ -> b tau",
+      "type": "LQ_->b_tau",
       "file": "leptoquark_LOWMASS_lepFilter_13TeV_filtered.h5"
     },
     {
-      "type": "h^0 -> tau tau",
+      "type": "h^0->tau_tau",
       "file": "hToTauTau_13TeV_PU20_filtered.h5"
     },
     {
-      "type": "h+ -> tau nu",
+      "type": "h+->tau_nu",
       "file": "hChToTauNu_13TeV_PU20_filtered.h5"
     }
   ]
