@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
 from utils import parse_event
 
 marker_scale = 30
@@ -129,4 +128,28 @@ def plot_hists(events, title):
 
     fig.suptitle(title)
     fig.tight_layout()
+    plt.show()
+
+
+def plot_train_history(dfhistory, title="Training History"):
+    x = np.arange(len(dfhistory["train_loss"]))
+    fig, ax1 = plt.subplots()
+
+    ax2 = ax1.twinx()
+    ax1.plot(x, dfhistory["train_MAPE"], '#1f77b4', label="train MAPE")
+    ax1.plot(x, dfhistory["val_MAPE"], '#aec7e8', label="val MAPE")
+    ax1.plot(x, dfhistory["train_Embed Ratio"], '#196619', label="train Embed Ratio")
+    ax1.plot(x, dfhistory["val_Embed Ratio"], '#98df8a', label="val Embed Ratio")
+    ax1.legend(loc="upper left")
+    ax2.plot(x, dfhistory["train_MAPE on index of dispersion"], '#d62728', label="tarin MAPE idx of dispersion")
+    ax2.plot(x, dfhistory["val_MAPE on index of dispersion"], '#f7b6d2', label="val MAPE idx of dispersion")
+    ax2.legend(loc="upper right")
+    # ax1.set_yscale('log')
+
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('MAPE of distence')
+    ax2.set_ylabel('MAPE of dispersion')
+
+    ax1.grid()
+    plt.title(title)
     plt.show()

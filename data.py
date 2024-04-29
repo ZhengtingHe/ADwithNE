@@ -5,7 +5,8 @@ import os
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-
+import torch
+from torch.utils.data import Dataset
 from emd import emd_pot
 
 
@@ -36,8 +37,6 @@ def read_h5_file(path, file_name, datatype='Particles'):
     elif datatype == "EMD":
         data = h5py.File(os.path.join(get_database_path(), "generated_data", file_name), "r")
         return np.array(data["pairs"]), np.array(data["emds"])
-
-
 
 
 def sample_pairs(n_events, n_pairs):
@@ -74,3 +73,27 @@ def store_emds_with_pairs(emds, pairs, file_name):
     f["emds"] = emds
     f.close()
 
+
+class PairedEventsDataset(Dataset):
+    def __init__(self, events, pairs, emds):
+        assert len(emds) == len(pairs)
+        assert len(pairs.shape) == 2 and pairs.shape[1] == 2
+        self.events = torch.from_numpy(events[:, :, :3])
+        self.pairs = torch.from_numpy(pairs)
+        self.emds = torch.from_numpy(emds)
+        
+    def __len__(self):
+        return len(self.pairs)
+
+    def __getitem__(self, idx):
+        return self.events[self.pairs[idx][0]], self.events[self.pairs[idx][1]], self.emds[idx]
+    
+class EventDataset(Dataset):
+    def __init__(self, events):
+        self.events = torch.from_numpy(events[:, :, :3])
+    
+    def __len__(self):
+        return len(self.events)
+    
+    def __getitem__(self, idx):
+        return self.events[idx]

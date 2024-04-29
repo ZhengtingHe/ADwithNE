@@ -24,29 +24,31 @@ def printlog(info):
     print(str(info)+"\n")
 
 class StepRunner:
-    def __init__(self, net, loss_fn,
+    def __init__(self, net, loss_fn, dist_fn,
                  stage = "train", metrics_dict = None, 
                  optimizer = None
                  ):
         self.model,self.loss_fn,self.metrics_dict,self.stage = net,loss_fn,metrics_dict,stage
         self.optimizer = optimizer
+        self.dist_fn = dist_fn
             
     def step(self, source_event, target_event, emd):
-        #loss
+        # forward
         source_event, target_event, emd = source_event.to(device), target_event.to(device), emd.to(device)
-
         source_emebedding = self.model(source_event)
         target_embedding = self.model(target_event)
-        loss = self.loss_fn(source_emebedding, target_embedding, emd)
+        emb_distance = self.dist_fn(source_emebedding, target_embedding)
+        # loss
+        loss = self.loss_fn(emb_distance, emd)
         
-        #backward()
+        # backward
         if self.optimizer is not None and self.stage=="train": 
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
             
-        #metrics
-        step_metrics = {self.stage+"_"+name:metric_fn(source_emebedding, target_embedding, emd).item() 
+        # metrics
+        step_metrics = {self.stage+"_"+name:(metric_fn(emb_distance, emd)).item()
                         for name,metric_fn in self.metrics_dict.items()}
         return loss.item(), step_metrics
     
@@ -82,7 +84,7 @@ class EpochRunner:
                 loop.set_postfix(**step_log)
             else:
                 epoch_loss = total_loss/step
-                epoch_metrics = {self.stage+"_"+name:metric_fn.compute()
+                epoch_metrics = {self.stage+"_"+name:metric_fn.compute().item()
                                  for name,metric_fn in self.steprunner.metrics_dict.items()}
                 epoch_log = dict({self.stage+"_loss":epoch_loss},**epoch_metrics)
                 loop.set_postfix(**epoch_log)
@@ -91,11 +93,13 @@ class EpochRunner:
                     metric_fn.reset()
         return epoch_log
 
-@torch.compile()
-def train_model(net, optimizer, loss_fn, metrics_dict, 
+# @torch.compile()
+def train_model(net, optimizer, 
+                loss_fn, dist_fn,
+                metrics_dict, 
                 train_dataloader, val_dataloader=None, 
                 epochs=10, ckpt_path='checkpoint.pt',
-                patience=5, monitor="MAPE", mode="min"):
+                patience=5, monitor="train_MAPE", mode="min"):
     
     history = {}
 
@@ -103,8 +107,8 @@ def train_model(net, optimizer, loss_fn, metrics_dict,
         printlog("Epoch {0} / {1}".format(epoch, epochs))
 
         # 1，train -------------------------------------------------  
-        train_step_runner = StepRunner(net = net,stage="train",
-                loss_fn = loss_fn,metrics_dict=deepcopy(metrics_dict),
+        train_step_runner = StepRunner(net = net,stage="train", dist_fn=dist_fn,
+                loss_fn = loss_fn,metrics_dict=metrics_dict,
                 optimizer = optimizer)
         train_epoch_runner = EpochRunner(train_step_runner)
         train_metrics = train_epoch_runner(train_dataloader)
@@ -115,7 +119,7 @@ def train_model(net, optimizer, loss_fn, metrics_dict,
         # 2，validate -------------------------------------------------
         if val_dataloader:
             val_step_runner = StepRunner(net = net,stage="val",
-                loss_fn = loss_fn,metrics_dict=deepcopy(metrics_dict))
+                loss_fn = loss_fn, dist_fn=dist_fn,metrics_dict=metrics_dict)
             val_epoch_runner = EpochRunner(val_step_runner)
             with torch.no_grad():
                 val_metrics = val_epoch_runner(val_dataloader)
@@ -124,7 +128,7 @@ def train_model(net, optimizer, loss_fn, metrics_dict,
                 history[name] = history.get(name, []) + [metric]
 
         # 3，early-stopping -------------------------------------------------
-        arr_scores = history[monitor]
+            arr_scores = history[monitor]
         best_score_idx = np.argmax(arr_scores) if mode=="max" else np.argmin(arr_scores)
         if best_score_idx==len(arr_scores)-1:
             torch.save(net.state_dict(),ckpt_path)
@@ -135,5 +139,15 @@ def train_model(net, optimizer, loss_fn, metrics_dict,
                 monitor,patience))
             break 
     net.load_state_dict(torch.load(ckpt_path))
-
     return pd.DataFrame(history)
+
+
+@torch.no_grad()
+def inference(model, dataloader, embed_dim=2):
+    model.eval()
+    embed = np.zeros((len(dataloader.dataset), embed_dim))
+    for i, event in enumerate(tqdm(dataloader)):
+        event = event.to(device)
+        output = model(event)
+        embed[i*len(event):(i+1)*len(event)] = output.cpu().numpy()
+    return embed
