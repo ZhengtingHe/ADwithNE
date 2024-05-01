@@ -88,6 +88,25 @@ class PairedEventsDataset(Dataset):
     def __getitem__(self, idx):
         return self.events[self.pairs[idx][0]], self.events[self.pairs[idx][1]], self.emds[idx]
     
+
+class RealTimeEMDDataset(Dataset):
+    def __init__(self, events, EMD_fn=emd_pot, n_pairs=100000):
+        self.events = events
+        self.tensor_events = torch.from_numpy(events[:, :, :3])
+        self.n_events = len(events)
+        self.n_pairs = n_pairs
+        self.EMD_fn = EMD_fn
+    
+    def __len__(self):
+        return self.n_pairs
+    
+    def __getitem__(self, idx):
+        pair = sample_pairs(self.n_events, 1)[0]
+        source_event = self.events[pair[0]]
+        target_event = self.events[pair[1]]
+        return self.tensor_events[pair[0]], self.tensor_events[pair[1]], torch.Tensor(self.EMD_fn(source_event, target_event))
+
+
 class EventDataset(Dataset):
     def __init__(self, events):
         self.events = torch.from_numpy(events[:, :, :3])

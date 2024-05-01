@@ -5,7 +5,7 @@ from ot.lp import emd_c, check_result
 
 # Ref: https://github.com/SangeonPark/ToyJetGenerator/blob/main/optimal_transport/emd.py
 
-def process_event(event):
+def process_event_np(event):
     event = np.array(event)
     # Sort constituents in event by pT in descending order
     # event = event[np.argsort(event[:, 0])[::-1]]
@@ -24,8 +24,8 @@ def emd_pot(source_event, target_event, norm=False, R=1.0, return_flow=False, n_
     check_shape(source_event)
     check_shape(target_event)
 
-    source_pTs, source_coords = process_event(source_event)
-    target_pTs, target_coords = process_event(target_event)
+    source_pTs, source_coords = process_event_np(source_event)
+    target_pTs, target_coords = process_event_np(target_event)
     source_total_pT, target_total_pT = source_pTs.sum(), target_pTs.sum()
     source_coords = source_coords
     target_coords = target_coords
@@ -68,4 +68,4 @@ def emd_pot(source_event, target_event, norm=False, R=1.0, return_flow=False, n_
     if return_flow:
         return cost * rescale, flow_matrix * rescale
     else:
-        return cost
+        return cost * rescale
