@@ -33,7 +33,10 @@ def get_h5_files():
 
 def read_h5_file(path, file_name, datatype='Particles'):
     if datatype == 'Particles':
-        return np.array(h5py.File(os.path.join(path, file_name), 'r')[datatype])
+        events = np.array(h5py.File(os.path.join(path, file_name), 'r')[datatype])
+        # Rotate the events so that MET is at phi = 0
+        events[:,:,2] = (events[:,:,2] - events[:,0,2].reshape(len(events), 1)) % np.pi 
+        return events
     elif datatype == "EMD":
         data = h5py.File(os.path.join(get_database_path(), "generated_data", file_name), "r")
         return np.array(data["pairs"]), np.array(data["emds"])
