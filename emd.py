@@ -5,12 +5,13 @@ from ot.lp import emd_c, check_result
 
 # Ref: https://github.com/SangeonPark/ToyJetGenerator/blob/main/optimal_transport/emd.py
 
-def process_event_np(event):
+def process_event_np(event, particle_type_scale=0):
     event = np.array(event)
     # Sort constituents in event by pT in descending order
     # event = event[np.argsort(event[:, 0])[::-1]]
     pts = event[:, 0]
-    coords = event[:, 1:3]
+    coords = event[:, 1:]
+    coords[:, 2] *= particle_type_scale
     return np.ascontiguousarray(pts), np.ascontiguousarray(coords)  # Return as contiguous arrays for C compatibility
 
 
@@ -24,8 +25,8 @@ def emd_pot(source_event, target_event, norm=False, R=1.0, return_flow=False, n_
     check_shape(source_event)
     check_shape(target_event)
 
-    source_pTs, source_coords = process_event_np(source_event)
-    target_pTs, target_coords = process_event_np(target_event)
+    source_pTs, source_coords = process_event_np(source_event, 100)
+    target_pTs, target_coords = process_event_np(target_event, 100)
     source_total_pT, target_total_pT = source_pTs.sum(), target_pTs.sum()
     source_coords = source_coords
     target_coords = target_coords

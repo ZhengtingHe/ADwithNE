@@ -37,6 +37,12 @@ def read_h5_file(path, file_name, datatype='Particles'):
     elif datatype == "EMD":
         data = h5py.File(os.path.join(get_database_path(), "generated_data", file_name), "r")
         return np.array(data["pairs"]), np.array(data["emds"])
+    
+
+def select_events(events, criteria):
+    # crtieria [bool, bool, bool] for [electron, muon, jets]
+    index = (events[:,1,3] == (2 * criteria[0])) & (events[:,5,3] == (3 * criteria[1])) & (events[:,9,3] == (4 * criteria[2]))
+    return index
 
 
 def sample_pairs(n_events, n_pairs):
@@ -116,3 +122,5 @@ class EventDataset(Dataset):
     
     def __getitem__(self, idx):
         return self.events[idx]
+    
+
