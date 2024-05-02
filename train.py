@@ -97,7 +97,8 @@ class EpochRunner:
 def train_model(net, optimizer, 
                 loss_fn, dist_fn,
                 metrics_dict, 
-                train_dataloader, val_dataloader=None, 
+                train_dataloader, val_dataloader=None,
+                scheduler=None, 
                 epochs=10, ckpt_path='checkpoint.pt',
                 patience=5, monitor="train_MAPE", mode="min"):
     
@@ -137,7 +138,9 @@ def train_model(net, optimizer,
         if len(arr_scores)-best_score_idx>patience:
             print("<<<<<< {} without improvement in {} epoch, early stopping >>>>>>".format(
                 monitor,patience))
-            break 
+            break
+        if scheduler:
+            scheduler.step() 
     net.load_state_dict(torch.load(ckpt_path))
     return pd.DataFrame(history)
 

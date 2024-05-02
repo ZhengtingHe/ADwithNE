@@ -16,3 +16,9 @@ def parse_event(event):
     jet_part = non_zero_part[non_zero_part[:, 3] == 4]
 
     return met_part, electron_part, muon_part, jet_part
+
+def embed_dict(embed_points, type):
+    output_dict = {"type": [type] * len(embed_points)}
+    for i in range(embed_points.shape[1]):
+        output_dict["Dimension {}".format(i)] = embed_points[:, i]
+    return output_dict
