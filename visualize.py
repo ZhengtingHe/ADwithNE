@@ -144,7 +144,7 @@ def plot_train_history(dfhistory, title="Training History"):
     ax1.set_yscale('log')
     ax1.legend(loc="upper left")
     ax2.plot(x, dfhistory["train_loss"], '#d62728', label="tarin loss")
-    ax2.plot(x, dfhistory["val_loss on index of dispersion"], '#f7b6d2', label="val loss")
+    ax2.plot(x, dfhistory["val_loss"], '#f7b6d2', label="val loss")
     ax2.legend(loc="upper right")
     # ax1.set_yscale('log')
 
