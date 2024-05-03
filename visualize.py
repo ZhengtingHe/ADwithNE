@@ -96,7 +96,7 @@ def plot_optimal_transport(source_event, target_event, flow_matrix, emd, verbose
                   fc='#FFD700', ec='#FFD700')  # arrow span
 
         if verbose:
-            print(f'From: {np.round(sending_coord,2)} to {np.round(receiving_coord,2)} with flow {flow:.2f}')
+            print(f'From: {np.round(sending_coord, 2)} to {np.round(receiving_coord, 2)} with flow {flow:.2f}')
 
     create_legend()
     plt.title(f'EMD: {emd:.2f}, Total flow: {len(index_send)}')
@@ -156,12 +156,13 @@ def plot_train_history(dfhistory, title="Training History"):
     plt.title(title)
     plt.show()
 
+
 def downsample_and_visualize_pairplot(df, sample_size):
     # Downsample the DataFrame
     df_sampled = df.sample(sample_size, random_state=114514)
 
     # Create pair plot using Seaborn
-    sns_plot = sns.pairplot(df, hue="type", kind="kde")
+    sns.pairplot(df_sampled, hue="type", kind="kde")
 
     # Show the plot using Matplotlib
     plt.show()

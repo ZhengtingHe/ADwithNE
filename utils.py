@@ -1,4 +1,3 @@
-import numpy as np
 def select_non_zero_constituents(event):
     # Select only constituents with non-zero pT
     return event[event[:, 0] != 0]
@@ -18,23 +17,9 @@ def parse_event(event):
 
     return met_part, electron_part, muon_part, jet_part
 
-def embed_dict(embed_points, type):
-    output_dict = {"type": [type] * len(embed_points)}
+
+def embed_dict(embed_points, event_type):
+    output_dict = {"type": [event_type] * len(embed_points)}
     for i in range(embed_points.shape[1]):
         output_dict["Dimension {}".format(i)] = embed_points[:, i]
     return output_dict
-
-def sample_pairs(n_events, n_pairs):
-    # np.random.choice can be extremely slow, use randint instead
-    pairs = np.random.randint(0, n_events, (n_pairs, 2))
-    # remove pairs with same index since we don't want to compare the same event
-    bad_samples_idx = np.where(pairs[:, 0] == pairs[:, 1])
-    for i in bad_samples_idx:
-        pairs[i] = np.random.choice(n_events, 2, replace=False)
-    return pairs
-
-def sample_matrix(n_events, pairs):
-    matrix = np.zeros((n_events, n_events))
-    for pair in pairs:
-        matrix[pair[0], pair[1]] += 1
-    return matrix
