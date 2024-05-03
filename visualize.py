@@ -143,14 +143,14 @@ def plot_train_history(dfhistory, title="Training History"):
     # ax1.plot(x, dfhistory["val_Embed Ratio"], '#98df8a', label="val Embed Ratio")
     ax1.set_yscale('log')
     ax1.legend(loc="upper left")
-    ax2.plot(x, dfhistory["train_MAPE on index of dispersion"], '#d62728', label="tarin MAPE idx of dispersion")
-    ax2.plot(x, dfhistory["val_MAPE on index of dispersion"], '#f7b6d2', label="val MAPE idx of dispersion")
+    ax2.plot(x, dfhistory["train_loss"], '#d62728', label="tarin loss")
+    ax2.plot(x, dfhistory["val_loss on index of dispersion"], '#f7b6d2', label="val loss")
     ax2.legend(loc="upper right")
     # ax1.set_yscale('log')
 
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('MAPE of distence')
-    ax2.set_ylabel('MAPE of dispersion')
+    ax2.set_ylabel('loss')
 
     ax1.grid()
     plt.title(title)

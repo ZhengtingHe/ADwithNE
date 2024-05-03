@@ -38,7 +38,7 @@ def read_h5_file(path, file_name, datatype='Particles'):
         events[:,:,2] = (events[:,:,2] - events[:,0,2].reshape(len(events), 1)) % np.pi 
         return events
     elif datatype == "EMD":
-        data = h5py.File(os.path.join(get_database_path(), "generated_data", file_name), "r")
+        data = h5py.File(os.path.join(path, file_name), "r")
         return np.array(data["pairs"]), np.array(data["emds"])
     
 
@@ -65,19 +65,19 @@ def sample_matrix(n_events, pairs):
     return matrix
 
 
-def sample_pairs_with_emd(events, n_pairs=None):
+def sample_pairs_with_emd(events, n_pairs=None, particle_type_scale=0, norm=False):
     n_events = len(events)
     if n_pairs is None:
         n_pairs = 5 * n_events
     pairs = sample_pairs(n_events, n_pairs)
     emds = np.zeros(n_pairs)
     for i, pair in enumerate(tqdm(pairs)):
-        emds[i] = emd_pot(events[pair[0]], events[pair[1]])
+        emds[i] = emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm)
     return pairs, emds
 
 
 def store_emds_with_pairs(emds, pairs, file_name):
-    f = h5py.File(os.path.join(get_database_path(), "generated_data", file_name), "w")
+    f = h5py.File(os.path.join("..","generated_data", file_name), "w")
     f["pairs"] = pairs
     f["emds"] = emds
     f.close()

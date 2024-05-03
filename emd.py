@@ -19,7 +19,7 @@ def check_shape(event):
     assert event.ndim == 2 and event.shape[-1] == 4, "Event shape must be (n, 4)"
 
 
-def emd_pot(source_event, target_event, norm=False, R=1.0, return_flow=False, n_iter_max=100000, particle_type_scale=0):
+def emd_pot(source_event, target_event, norm=False, return_flow=False, n_iter_max=100000, particle_type_scale=0):
     # Compute energy  mover's distance between two events using python ot library 
 
     check_shape(source_event)
@@ -30,6 +30,8 @@ def emd_pot(source_event, target_event, norm=False, R=1.0, return_flow=False, n_
     source_total_pT, target_total_pT = source_pTs.sum(), target_pTs.sum()
     source_coords = source_coords
     target_coords = target_coords
+    # R ≥1 2θmax, where θmax is the maximum attainable angular distance between particles
+    R = np.sqrt(4 ** 2 + np.pi ** 2 + (2 * particle_type_scale) ** 2)
 
     # if norm, then we normalize the pts to 1
     if norm:

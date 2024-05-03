@@ -160,3 +160,4 @@ cython_debug/
 .idea/
 demo/checkpoint.pt
 model/*
+generated_data/*
