@@ -10,17 +10,16 @@ class MLP(nn.Module):
         def make_layer(in_size, out_size):
             return nn.Sequential(
                 nn.Linear(in_size, out_size),
-                nn.LeakyReLU(),
-                nn.Dropout(0.1)
+                nn.ReLU(),
+                # nn.Dropout(0.1)
             )
         self.layers = nn.Sequential(
             make_layer(input_size, hidden_sizes[0]),
             *[make_layer(hidden_sizes[i], hidden_sizes[i+1]) for i in range(len(hidden_sizes)-1)],
-            nn.Softmax(dim=1)
+            nn.Sigmoid()
         )
 
     def forward(self, x):
-        x = x.view(x.size(0), -1)
         return self.layers(x)
     
 
