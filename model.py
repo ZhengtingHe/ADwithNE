@@ -5,7 +5,7 @@ from torch.nn import TransformerEncoder, TransformerEncoderLayer
 from torch.utils.data import Dataset, DataLoader
 
 class MLP(nn.Module):
-    def __init__(self, input_size, hidden_sizes, output_size):
+    def __init__(self, input_size, hidden_sizes):
         super(MLP, self).__init__()
         def make_layer(in_size, out_size):
             return nn.Sequential(
@@ -16,7 +16,7 @@ class MLP(nn.Module):
         self.layers = nn.Sequential(
             make_layer(input_size, hidden_sizes[0]),
             *[make_layer(hidden_sizes[i], hidden_sizes[i+1]) for i in range(len(hidden_sizes)-1)],
-            nn.Linear(hidden_sizes[-1], output_size)
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
