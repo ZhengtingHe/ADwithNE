@@ -126,7 +126,7 @@ class RealTimeEMDDataset(Dataset):
 
 class EventDataset(Dataset):
     def __init__(self, events):
-        self.events = torch.from_numpy(events[:, :, :3],)
+        self.events = torch.from_numpy(events[:, :, :3],).float()
     
     def __len__(self):
         return len(self.events)
