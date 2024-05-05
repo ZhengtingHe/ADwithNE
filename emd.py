@@ -11,7 +11,9 @@ def process_event_np(event, particle_type_scale=0):
     # event = event[np.argsort(event[:, 0])[::-1]]
     pts = event[:, 0]
     coords = event[:, 1:]
-    coords[:, 2] *= particle_type_scale
+    type_encoding = np.vstack((np.zeros(([1,4])), np.eye(4)))
+    coords = np.hstack((coords[:, :2], type_encoding[coords[:,2].astype(int)]))
+    coords[:, 2:] *= particle_type_scale
     return np.ascontiguousarray(pts), np.ascontiguousarray(coords)  # Return as contiguous arrays for C compatibility
 
 
