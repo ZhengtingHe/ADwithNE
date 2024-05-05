@@ -1,3 +1,5 @@
+import toml
+import os
 def select_non_zero_constituents(event):
     # Select only constituents with non-zero pT
     return event[event[:, 0] != 0]
@@ -23,3 +25,10 @@ def embed_dict(embed_points, event_type):
     for i in range(embed_points.shape[1]):
         output_dict["Dimension {}".format(i)] = embed_points[:, i]
     return output_dict
+
+
+def load_toml_config(key):
+    module_path = os.path.dirname(__file__)
+    with open(os.path.join(module_path, 'config.toml'), 'r') as f:
+        config = toml.load(f)
+    return config[key]

@@ -82,6 +82,14 @@ def store_emds_with_pairs(emds, pairs, file_name):
     f["emds"] = emds
     f.close()
 
+def sample_pairs_from_diff_dataset(events1, events2, n_pairs, particle_type_scale=0, norm=False):
+    index1 = np.random.randint(0, len(events1), n_pairs)
+    index2 = np.random.randint(0, len(events2), n_pairs)
+    pairs = np.stack([index1, index2], axis=1)
+    emds = np.zeros(n_pairs)
+    for i, (idx1, idx2) in enumerate(tqdm(pairs)):
+        emds[i] = emd_pot(events1[idx1], events2[idx2], particle_type_scale=particle_type_scale, norm=norm)
+    return pairs, emds
 
 class PairedEventsDataset(Dataset):
     def __init__(self, events, pairs, emds):
