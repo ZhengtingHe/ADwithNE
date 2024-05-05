@@ -28,3 +28,17 @@ lr = 1e-3
 weight_decay = 1e-5
 batch_size = 256
 
+[sig_color]
+leptoquark = "#FFBE7A" 
+neutral_boson = "#8ECFC9"
+neutral_Higgs = "#FA7F6F"
+charged_Higgs = "#D4ACF4"
+SM = "#B8C7D1"
+
+[event_color]
+Electron = '#4D9DE0' 
+Muon = '#E15554' 
+Electron_Muon = '#3BB273' 
+Electron_Jets = '#7768AE' 
+Muon_Jets = '#EB8A44' 
+Electron_Muon_Jets = '#FFC15E' 

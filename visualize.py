@@ -157,12 +157,12 @@ def plot_train_history(dfhistory, title="Training History"):
     plt.show()
 
 
-def downsample_and_visualize_pairplot(df, sample_size):
+def downsample_and_visualize_pairplot(df, sample_size, palette=None):
     # Downsample the DataFrame
     df_sampled = df.sample(sample_size, random_state=114514)
 
     # Create pair plot using Seaborn
-    sns.pairplot(df_sampled, hue="type", kind="kde")
+    sns.pairplot(df_sampled, hue="type", kind="kde", palette=palette)
 
     # Show the plot using Matplotlib
     plt.show()
