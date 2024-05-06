@@ -65,14 +65,14 @@ def sample_matrix(n_events, pairs):
     return matrix
 
 
-def sample_pairs_with_emd(events, n_pairs=None, particle_type_scale=0, norm=False):
+def sample_pairs_with_emd(events, n_pairs=None, particle_type_scale=0, norm=False, particle_one_hot=True):
     n_events = len(events)
     if n_pairs is None:
         n_pairs = 5 * n_events
     pairs = sample_pairs(n_events, n_pairs)
     emds = np.zeros(n_pairs)
     for i, pair in enumerate(tqdm(pairs)):
-        emds[i] = emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm)
+        emds[i] = emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm, particle_one_hot=particle_one_hot)
     return pairs, emds
 
 

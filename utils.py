@@ -23,7 +23,7 @@ def parse_event(event):
 def embed_dict(embed_points, event_type):
     output_dict = {"type": [event_type] * len(embed_points)}
     for i in range(embed_points.shape[1]):
-        output_dict["Dimension {}".format(i)] = embed_points[:, i]
+        output_dict["Dimension {}".format(i+1)] = embed_points[:, i]
     return output_dict
 
 

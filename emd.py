@@ -5,14 +5,15 @@ from ot.lp import emd_c, check_result
 
 # Ref: https://github.com/SangeonPark/ToyJetGenerator/blob/main/optimal_transport/emd.py
 
-def process_event_np(event, particle_type_scale=0):
+def process_event_np(event, particle_type_scale=0, particle_one_hot=True):
     event = np.array(event)
     # Sort constituents in event by pT in descending order
     # event = event[np.argsort(event[:, 0])[::-1]]
     pts = event[:, 0]
     coords = event[:, 1:]
-    type_encoding = np.vstack((np.zeros(([1,4])), np.eye(4)))
-    coords = np.hstack((coords[:, :2], type_encoding[coords[:,2].astype(int)]))
+    if particle_one_hot:
+        type_encoding = np.vstack((np.zeros([1,4]), np.eye(4)))
+        coords = np.hstack((coords[:, :2], type_encoding[coords[:,2].astype(int)]))
     coords[:, 2:] *= particle_type_scale
     return np.ascontiguousarray(pts), np.ascontiguousarray(coords)  # Return as contiguous arrays for C compatibility
 
@@ -21,14 +22,14 @@ def check_shape(event):
     assert event.ndim == 2 and event.shape[-1] == 4, "Event shape must be (n, 4)"
 
 
-def emd_pot(source_event, target_event, norm=False, return_flow=False, n_iter_max=100000, particle_type_scale=0):
+def emd_pot(source_event, target_event, norm=False, return_flow=False, n_iter_max=100000, particle_type_scale=0, particle_one_hot=True):
     # Compute energy  mover's distance between two events using python ot library 
 
     check_shape(source_event)
     check_shape(target_event)
 
-    source_pTs, source_coords = process_event_np(source_event, particle_type_scale)
-    target_pTs, target_coords = process_event_np(target_event, particle_type_scale)
+    source_pTs, source_coords = process_event_np(source_event, particle_type_scale, particle_one_hot=particle_one_hot)
+    target_pTs, target_coords = process_event_np(target_event, particle_type_scale, particle_one_hot=particle_one_hot)
     source_total_pT, target_total_pT = source_pTs.sum(), target_pTs.sum()
     source_coords = source_coords
     target_coords = target_coords
