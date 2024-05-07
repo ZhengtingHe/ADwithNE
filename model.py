@@ -16,11 +16,12 @@ class MLP(nn.Module):
         self.layers = nn.Sequential(
             make_layer(input_size, hidden_sizes[0]),
             *[make_layer(hidden_sizes[i], hidden_sizes[i+1]) for i in range(len(hidden_sizes)-1)],
+            nn.Linear(hidden_sizes[-1], 1),
             nn.Sigmoid()
         )
 
     def forward(self, x):
-        return self.layers(x)
+        return self.layers(x).reshape(-1)
     
 
 class ParticlePositionalEncoding(nn.Module):
