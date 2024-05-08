@@ -10,7 +10,7 @@ class MLP(nn.Module):
         def make_layer(in_size, out_size):
             return nn.Sequential(
                 nn.Linear(in_size, out_size),
-                nn.ReLU(),
+                nn.LeakyReLU(),
                 # nn.Dropout(0.1)
             )
         self.layers = nn.Sequential(
