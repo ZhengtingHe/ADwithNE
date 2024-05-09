@@ -11,10 +11,11 @@ device = "cuda" if torch.cuda.is_available() else "mps" if sys.platform == "darw
 @torch.no_grad()
 def inference(model, dataloader, embed_dim=2):
     model.eval()
+    batch_size = dataloader.batch_size
     embed = np.zeros((len(dataloader.dataset), embed_dim))
     for i, event in enumerate(tqdm(dataloader)):
         event = event.to(device)
         output = model(event)
-        embed[i*len(event):(i+1)*len(event)] = output.cpu().numpy()
+        embed[i * batch_size:(i + 1) * batch_size] = output.cpu().numpy()
     return embed
 
