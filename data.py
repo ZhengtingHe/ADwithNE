@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
-from emd import emd_pot
+from emd import emd_pot, sep_emd
 
 
 def load_config():
@@ -65,14 +65,18 @@ def sample_matrix(n_events, pairs):
     return matrix
 
 
-def sample_pairs_with_emd(events, n_pairs=None, particle_type_scale=0, norm=False, particle_one_hot=True):
+def sample_pairs_with_emd(events, n_pairs=None, particle_type_scale=0, norm=False, pid_method='one-hot'):
     n_events = len(events)
     if n_pairs is None:
         n_pairs = 5 * n_events
     pairs = sample_pairs(n_events, n_pairs)
     emds = np.zeros(n_pairs)
-    for i, pair in enumerate(tqdm(pairs)):
-        emds[i] = emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm, particle_one_hot=particle_one_hot)
+    if pid_method == 'one-hot':
+        for i, pair in enumerate(tqdm(pairs)):
+            emds[i] = emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm, particle_one_hot=True)
+    elif pid_method == 'separate':
+        for i, pair in enumerate(tqdm(pairs)):
+            emds[i] = sep_emd(events[pair[0]], events[pair[1]])
     return pairs, emds
 
 
@@ -82,13 +86,17 @@ def store_emds_with_pairs(emds, pairs, file_name):
     f["emds"] = emds
     f.close()
 
-def sample_pairs_from_diff_dataset(events1, events2, n_pairs, particle_type_scale=0, norm=False):
+def sample_pairs_from_diff_dataset(events1, events2, n_pairs, particle_type_scale=0, norm=False, pid_method='one_hot'):
     index1 = np.random.randint(0, len(events1), n_pairs)
     index2 = np.random.randint(0, len(events2), n_pairs)
     pairs = np.stack([index1, index2], axis=1)
     emds = np.zeros(n_pairs)
-    for i, (idx1, idx2) in enumerate(tqdm(pairs)):
-        emds[i] = emd_pot(events1[idx1], events2[idx2], particle_type_scale=particle_type_scale, norm=norm)
+    if pid_method == 'one_hot':
+        for i, (idx1, idx2) in enumerate(tqdm(pairs)):
+            emds[i] = emd_pot(events1[idx1], events2[idx2], particle_type_scale=particle_type_scale, norm=norm)
+    elif pid_method == 'separate':
+        for i, (idx1, idx2) in enumerate(tqdm(pairs)):
+            emds[i] = sep_emd(events1[idx1], events2[idx2])
     return pairs, emds
 
 class PairedEventsDataset(Dataset):

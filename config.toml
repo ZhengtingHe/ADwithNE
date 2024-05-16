@@ -15,6 +15,7 @@ particle_one_hot = true
 n_pair = 2000000
 norm = false
 save_emd = true
+pid_method= 'separate' # 'separate' or 'one-hot'
 
 [Transformer]
 feature_size = 3  # pT, eta, phi
