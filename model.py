@@ -8,17 +8,20 @@ class MLP(nn.Module):
     def __init__(self, input_size, hidden_sizes):
         super(MLP, self).__init__()
         def make_layer(in_size, out_size):
-            return nn.Sequential(
+            layer = nn.Sequential(
                 nn.Linear(in_size, out_size),
                 nn.LeakyReLU(),
                 # nn.Dropout(0.1)
             )
+            nn.init.kaiming_normal_(layer[0].weight, nonlinearity='leaky_relu')
+            return layer
         self.layers = nn.Sequential(
             make_layer(input_size, hidden_sizes[0]),
             *[make_layer(hidden_sizes[i], hidden_sizes[i+1]) for i in range(len(hidden_sizes)-1)],
             nn.Linear(hidden_sizes[-1], 1),
             nn.Sigmoid()
         )
+    
 
     def forward(self, x):
         return self.layers(x).reshape(-1)

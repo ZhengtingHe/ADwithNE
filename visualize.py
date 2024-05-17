@@ -166,3 +166,30 @@ def downsample_and_visualize_pairplot(df, sample_size, palette=None):
 
     # Show the plot using Matplotlib
     plt.show()
+
+def plot_roc_curve(fpr_dict, tpr_dict, auc_dict, title):
+    for key in fpr_dict.keys():
+        fpr = fpr_dict[key]
+        tpr = tpr_dict[key]
+        auc_roc = auc_dict[key]
+        plt.plot(fpr, tpr, label='Lambda = {} (AUC = {:.2f})'.format(key, auc_roc))
+    # plt.plot(fpr, tpr, 'k--', label='ROC (area = {0:.2f})'.format(auc_roc), lw=2)    
+    plt.xlim([-0.05, 1.05])
+    plt.ylim([-0.05, 1.05])
+    plt.xlabel('FPR')
+    plt.ylabel('TPR') 
+    plt.title(title)
+    plt.legend(loc="lower right")
+    plt.show()
+
+def plot_lambda(lambda_mean_dict, lambda_std_dict):
+    x = np.array([float(key) for key in lambda_mean_dict.keys()])
+    y = np.array([lambda_mean_dict[key] for key in lambda_mean_dict.keys()])
+    yerr = np.array([lambda_std_dict[key] for key in lambda_std_dict.keys()])
+    plt.errorbar(x, y, yerr=yerr, fmt='o', color='black', ecolor='lightgray', elinewidth=3)
+    true_x = np.linspace(0, np.max(x), 10)
+    plt.plot(true_x, true_x, '--')
+    plt.xlabel("True Lambda")
+    plt.ylabel("Estimated Lambda")
+    plt.title("Estimated Lambda vs True Lambda")
+    plt.show()

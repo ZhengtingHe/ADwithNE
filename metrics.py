@@ -41,3 +41,23 @@ class MetricUpdater(nn.Module):
         self.total_metric = 0
         self.count = 0
 
+class BinaryACCUpdater(nn.Module):
+    def __init__(self, threshold=0.5):
+        super(BinaryACCUpdater, self).__init__()
+        self.total_acc = 0
+        self.count = 0
+        self.threshold = threshold
+    def forward(self, output, label):
+        acc = (output > self.threshold).float() == label
+        mean_acc = acc.float().mean()
+        self.update(mean_acc)
+        return mean_acc
+    def update(self, metric):
+        self.total_acc += metric
+        self.count += 1
+    def compute(self):
+        return self.total_acc / self.count
+    def reset(self):
+        self.total_acc = 0
+        self.count = 0
+
