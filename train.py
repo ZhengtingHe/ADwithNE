@@ -64,13 +64,17 @@ class StepRunner:
 
 
 class EpochRunner:
-    def __init__(self, step_runner):
+    def __init__(self, step_runner, verbose=True):
         self.step_runner = step_runner
         self.stage = step_runner.stage
+        self.verbose = verbose
 
     def __call__(self, dataloader):
         total_loss, step = 0, 0
-        loop = tqdm(enumerate(dataloader), total=len(dataloader), file=sys.stdout)
+        if self.verbose:
+            loop = tqdm(enumerate(dataloader), total=len(dataloader), file=sys.stdout)
+        else:
+            loop = enumerate(dataloader)
         epoch_log = {}
         for batch_idx, (source_event, target_event, emd) in loop:
             loss, step_metrics = self.step_runner(source_event, target_event, emd)
@@ -78,13 +82,15 @@ class EpochRunner:
             total_loss += loss
             step += 1
             if batch_idx != len(dataloader) - 1:
-                loop.set_postfix(**step_log)
+                if self.verbose:
+                    loop.set_postfix(**step_log)
             else:
                 epoch_loss = total_loss / step
                 epoch_metrics = {self.stage + "_" + name: metric_fn.compute().item()
                                  for name, metric_fn in self.step_runner.metrics_dict.items()}
                 epoch_log = dict({self.stage + "_loss": epoch_loss}, **epoch_metrics)
-                loop.set_postfix(**epoch_log)
+                if self.verbose:
+                    loop.set_postfix(**epoch_log)
 
                 for name, metric_fn in self.step_runner.metrics_dict.items():
                     metric_fn.reset()
@@ -98,17 +104,18 @@ def train_model(net, optimizer,
                 train_dataloader, val_dataloader=None,
                 scheduler=None,
                 epochs=10, ckpt_path='checkpoint.pt',
-                patience=5, monitor="train_MAPE", mode="min"):
+                patience=5, monitor="train_MAPE", mode="min", verbose=True):
     history = {}
 
     for epoch in range(1, epochs + 1):
-        printlog("Epoch {0} / {1}".format(epoch, epochs))
+        if verbose:
+            printlog("Epoch {0} / {1}".format(epoch, epochs))
 
         # 1，train -------------------------------------------------  
         train_step_runner = StepRunner(net=net, stage="train", dist_fn=dist_fn,
                                        loss_fn=loss_fn, metrics_dict=metrics_dict,
                                        optimizer=optimizer)
-        train_epoch_runner = EpochRunner(train_step_runner)
+        train_epoch_runner = EpochRunner(train_step_runner, verbose=verbose)
         train_metrics = train_epoch_runner(train_dataloader)
 
         for name, metric in train_metrics.items():
@@ -118,7 +125,7 @@ def train_model(net, optimizer,
         if val_dataloader:
             val_step_runner = StepRunner(net=net, stage="val",
                                          loss_fn=loss_fn, dist_fn=dist_fn, metrics_dict=metrics_dict)
-            val_epoch_runner = EpochRunner(val_step_runner)
+            val_epoch_runner = EpochRunner(val_step_runner, verbose=verbose)
             with torch.no_grad():
                 val_metrics = val_epoch_runner(val_dataloader)
             val_metrics["epoch"] = epoch

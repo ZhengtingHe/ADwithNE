@@ -132,7 +132,7 @@ def plot_hists(events, title):
     plt.show()
 
 
-def plot_train_history(dfhistory, title="Training History"):
+def plot_train_history(dfhistory, title="Training History", yscale=False):
     x = np.arange(len(dfhistory["train_loss"]))
     fig, ax1 = plt.subplots()
 
@@ -146,7 +146,8 @@ def plot_train_history(dfhistory, title="Training History"):
     ax2.plot(x, dfhistory["train_loss"], '#d62728', label="tarin loss")
     ax2.plot(x, dfhistory["val_loss"], '#f7b6d2', label="val loss")
     ax2.legend(loc="upper right")
-    # ax1.set_yscale('log')
+    if yscale:
+        ax1.set_yscale(yscale)
 
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('MAPE of distence')

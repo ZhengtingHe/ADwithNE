@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import sys
 from torch.utils.data import Dataset, DataLoader
-from sklearn.metrics import roc_curve, auc
+from sklearn import metrics
 from scipy.optimize import curve_fit
 
 sys.path.append("..")
@@ -61,7 +61,7 @@ class Normalizer:
         return (x - self.min) / (self.max - self.min)
 
 class ClassifyDataset(Dataset):
-    def __init__(self, exp_events, bkg_events, normalizer=None):
+    def __init__(self, exp_events, bkg_events, normalizer):
         """
         Experiment events labeled as 1, background events labeled as 0.
         """
@@ -82,7 +82,7 @@ class ClassifyDataset(Dataset):
         return self.events[idx], self.labels[idx]
     
 
-def get_dataloaders(X1, W1, val_ratio, normalizer=None):
+def get_dataloaders(X1, W1, val_ratio, normalizer):
     """
     Get dataloaders for training and validation sets.
     """
@@ -112,12 +112,12 @@ def predict(model, dataloader):
     return targets, predictions
 
 def calculate_auc(targets, predictions):
-    fpr, tpr, thersholds = roc_curve(targets, predictions)
-    auc_roc = auc(fpr, tpr)
+    fpr, tpr, _ = metrics.roc_curve(targets, predictions)
+    auc_roc = metrics.auc(fpr, tpr)
     return fpr, tpr, auc_roc
 
 class TestDataset(Dataset):
-    def __init__(self, events, normalizer=None):
+    def __init__(self, events, normalizer):
         if normalizer:
             events = normalizer(events)
         self.events = torch.from_numpy(events).float()
@@ -162,7 +162,7 @@ def mce(h_W, h_X, pi):
     return 0.5 * ((1/m2) * x_sum + (1/n2) * w_sum)
 
 class Bootstrap_Permutation:
-    def __init__(self, X2, W2, classifier, pi, normalizer=None):
+    def __init__(self, X2, W2, classifier, pi, normalizer):
         assert len(X2) == len(W2) # Make sure n2= m2
         self.m2 = len(X2)
         self.n2 = len(W2)
@@ -241,7 +241,7 @@ class Bootstrap_Permutation:
         return lrt_null, auc_null, mce_null
     
 class LambdaEstimator:
-    def __init__(self, X2, W2, classifier, T=0.5, n_bins=20, normalizer=None):
+    def __init__(self, X2, W2, classifier, normalizer, T=0.5, n_bins=20):
         assert len(X2) == len(W2) # Make sure n2= m2
         self.m2 = len(X2)
         self.n2 = len(W2)
@@ -263,12 +263,12 @@ class LambdaEstimator:
             return np.exp(beta0 + beta1 * t)
         def exp_const(_, beta0):
             return np.exp(beta0)
-        opt, _ = curve_fit(poisson, self.bins[self.fit_start_idx:], self.H_t[self.fit_start_idx-1:])
+        opt, _ = curve_fit(poisson, self.bins[self.fit_start_idx:], self.H_t[self.fit_start_idx-1:], p0=[0, 0])
         self.beta0, self.beta1 = opt
         # Constrain β1 ≤ 0, refit β0 when β1 > 0
         if self.beta1 > 0:
             self.beta1 = 0
-            opt, _ = curve_fit(exp_const, self.bins[self.fit_start_idx:], self.H_t[self.fit_start_idx-1:])
+            opt, _ = curve_fit(exp_const, self.bins[self.fit_start_idx:], self.H_t[self.fit_start_idx-1:], p0=[0])
             self.beta0 = opt[0]
         self.estimated_H_t = poisson(self.bins[self.fit_start_idx:], self.beta0, self.beta1)
         self.estimated_lambda = 1 - poisson(1, self.beta0, self.beta1)
