@@ -35,6 +35,8 @@ def separate_particles(event):
 def check_shape(event):
     assert event.ndim == 2 and event.shape[-1] == 4, "Event shape must be (n, 4)"
 
+def periodic_phi_dist(u, v):
+    return np.sqrt((u[0] - v[0]) ** 2 + (np.minimum(np.abs(u[1] - v[1]), 2 * np.pi - np.abs(u[1] - v[1]))) ** 2)
 
 def emd_pot(source_event, target_event, norm=False, return_flow=False, n_iter_max=100000, particle_type_scale=0, particle_one_hot=True):
     # Compute energy  mover's distance between two events using python ot library 
@@ -63,18 +65,18 @@ def emd_pot(source_event, target_event, norm=False, return_flow=False, n_iter_ma
         if pTdiff > 0:
             source_pTs = np.hstack((source_pTs, pTdiff))
             source_coords_extra = np.vstack((source_coords, np.zeros(source_coords.shape[1], dtype=np.float64)))
-            thetas = cdist(source_coords_extra, target_coords) / R
+            thetas = cdist(source_coords_extra, target_coords, periodic_phi_dist) / R
             thetas[-1, :] = 1.0
 
         elif pTdiff < 0:
             target_pTs = np.hstack((target_pTs, -pTdiff))
             target_coords_extra = np.vstack((target_coords, np.zeros(target_coords.shape[1], dtype=np.float64)))
-            thetas = cdist(source_coords, target_coords_extra) / R
+            thetas = cdist(source_coords, target_coords_extra, periodic_phi_dist) / R
             thetas[:, -1] = 1.0
 
         # in this case, the pts were exactly equal already so no need to add a particle
         else:
-            thetas = cdist(source_coords, target_coords) / R
+            thetas = cdist(source_coords, target_coords, periodic_phi_dist) / R
 
         # change units for numerical stability
         rescale = max(source_total_pT, target_total_pT)
@@ -114,8 +116,8 @@ def ot_within_type(source_pt, target_pt, source_coords, target_coords, n_iter_ma
     
 
 def sep_emd(source_event, target_event, n_iter_max=100000):
-    MET_source_pt, MET_source_coords, electron_source_pts, electron_source_coords, muon_source_pts, muon_source_coords, jet_source_pts, jet_source_coords = separate_particles(source_event)
-    MET_target_pt, MET_target_coords, electron_target_pts, electron_target_coords, muon_target_pts, muon_target_coords, jet_target_pts, jet_target_coords = separate_particles(target_event)
+    MET_source_pt, _, electron_source_pts, electron_source_coords, muon_source_pts, muon_source_coords, jet_source_pts, jet_source_coords = separate_particles(source_event)
+    MET_target_pt, _, electron_target_pts, electron_target_coords, muon_target_pts, muon_target_coords, jet_target_pts, jet_target_coords = separate_particles(target_event)
 
     R = np.sqrt(4 ** 2 + np.pi ** 2)
 

@@ -141,7 +141,6 @@ def plot_train_history(dfhistory, title="Training History", yscale=False):
     ax1.plot(x, dfhistory["val_MAPE"], '#aec7e8', label="val MAPE")
     # ax1.plot(x, dfhistory["train_Embed Ratio"], '#196619', label="train Embed Ratio")
     # ax1.plot(x, dfhistory["val_Embed Ratio"], '#98df8a', label="val Embed Ratio")
-    ax1.set_yscale('log')
     ax1.legend(loc="upper left")
     ax2.plot(x, dfhistory["train_loss"], '#d62728', label="tarin loss")
     ax2.plot(x, dfhistory["val_loss"], '#f7b6d2', label="val loss")
