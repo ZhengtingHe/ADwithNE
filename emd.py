@@ -92,7 +92,7 @@ def emd_pot(source_event, target_event, norm=False, return_flow=False, n_iter_ma
     else:
         return cost * rescale
     
-def ot_within_type(source_pt, target_pt, source_coords, target_coords, n_iter_max=100000):
+def ot_within_type(source_pt, target_pt, source_coords, target_coords, n_iter_max=100000, return_flow=False):
     source_sum_pt = source_pt.sum()
     target_sum_pt = target_pt.sum()
     R = np.sqrt(4 ** 2 + np.pi ** 2)
@@ -110,43 +110,60 @@ def ot_within_type(source_pt, target_pt, source_coords, target_coords, n_iter_ma
     else:
         thetas = cdist(source_coords, target_coords) / R
     rescale = max(source_sum_pt, target_sum_pt)
-    _, cost, _, _, result_code = emd_c(source_pt / rescale, target_pt / rescale, thetas, n_iter_max, True)
+    flow_matrix, cost, _, _, result_code = emd_c(source_pt / rescale, target_pt / rescale, thetas, n_iter_max, True)
     check_result(result_code)
-    return cost * rescale
+    if return_flow:
+        return cost * rescale, flow_matrix * rescale
+    else:
+        return cost * rescale
     
 
-def sep_emd(source_event, target_event, n_iter_max=100000):
+def sep_emd(source_event, target_event, n_iter_max=100000, return_flow=False):
     MET_source_pt, _, electron_source_pts, electron_source_coords, muon_source_pts, muon_source_coords, jet_source_pts, jet_source_coords = separate_particles(source_event)
     MET_target_pt, _, electron_target_pts, electron_target_coords, muon_target_pts, muon_target_coords, jet_target_pts, jet_target_coords = separate_particles(target_event)
 
-    R = np.sqrt(4 ** 2 + np.pi ** 2)
 
     MET_EMD = abs(MET_source_pt - MET_target_pt)
 
 
     # Make sure that there are at least 1 specific particle in the source or target
     if electron_source_pts[0] != 0 or electron_target_pts[0] != 0:
-        electron_EMD = ot_within_type(electron_source_pts, electron_target_pts, electron_source_coords, electron_target_coords, n_iter_max)
-
+        if return_flow:
+            electron_EMD, e_matrix = ot_within_type(electron_source_pts, electron_target_pts, electron_source_coords, electron_target_coords, n_iter_max, return_flow)
+        else:
+            electron_EMD = ot_within_type(electron_source_pts, electron_target_pts, electron_source_coords, electron_target_coords, n_iter_max)
+            
     else:
         electron_EMD = 0
+        e_matrix = None
     
     
     if muon_source_pts[0] != 0 or muon_target_pts[0] != 0:
-        muon_EMD = ot_within_type(muon_source_pts, muon_target_pts, muon_source_coords, muon_target_coords, n_iter_max)
-
+        if return_flow:
+            muon_EMD, mu_matrix = ot_within_type(muon_source_pts, muon_target_pts, muon_source_coords, muon_target_coords, n_iter_max, return_flow)
+        else:
+            muon_EMD = ot_within_type(muon_source_pts, muon_target_pts, muon_source_coords, muon_target_coords, n_iter_max)
+            
     else:
         muon_EMD = 0
+        mu_matrix = None
     
     
     if jet_source_pts[0] != 0 or jet_target_pts[0] != 0:
-        jet_EMD = ot_within_type(jet_source_pts, jet_target_pts, jet_source_coords, jet_target_coords, n_iter_max)
+        if return_flow:
+            jet_EMD, jet_matrix = ot_within_type(jet_source_pts, jet_target_pts, jet_source_coords, jet_target_coords, n_iter_max, return_flow)
+        else:
+            jet_EMD = ot_within_type(jet_source_pts, jet_target_pts, jet_source_coords, jet_target_coords, n_iter_max)
 
     else:
         jet_EMD = 0
+        jet_matrix = None
     
     total_EMD = MET_EMD + electron_EMD + muon_EMD + jet_EMD
-    return total_EMD
+    if return_flow:
+        return total_EMD, e_matrix, mu_matrix, jet_matrix
+    else:
+        return total_EMD
 
 
 

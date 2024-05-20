@@ -3,6 +3,8 @@ import numpy as np
 from utils import parse_event
 import seaborn as sns
 
+from emd import separate_particles
+
 marker_scale = 30
 
 
@@ -101,6 +103,94 @@ def plot_optimal_transport(source_event, target_event, flow_matrix, emd, verbose
     create_legend()
     plt.title(f'EMD: {emd:.2f}, Total flow: {len(index_send)}')
     plt.show()
+
+def plot_particle(event_coord, event_pt, type, state='source'):
+    particle_colors = np.array([
+        ["#DA70D6", "#800080"],
+        ["#FFA07A", "#FF4500"],
+        ["#D3D3D3", "#708090"]
+    ])
+    event_coord = event_coord[event_pt != 0]
+    event_pt = event_pt[event_pt != 0]
+
+    color_state = 1 if state == 'target' else 0
+    plot_colors = particle_colors[:, color_state]
+
+    markers = ['^', 's', 'D']
+    labels = ['Electrons', 'Muons', 'Jets']
+    plt.scatter(
+        event_coord[:, 0], event_coord[:, 1],
+        color=plot_colors[type],
+        marker=markers[type],
+        s=event_pt * marker_scale,
+        alpha=0.5,
+        label=state + labels[type]
+    )
+
+    for eta, phi, pt in zip(event_coord[:, 0], event_coord[:, 1], event_pt):
+        plt.text(eta, phi, "{:.2f}".format(pt))
+
+def plot_separate_optimal_transport(source_event, target_event, e_matrix, mu_matrix, jet_matrix, total_emd, verbose=False):
+    MET_source_pt, _, electron_source_pts, electron_source_coords, muon_source_pts, muon_source_coords, jet_source_pts, jet_source_coords = separate_particles(source_event)
+    MET_target_pt, _, electron_target_pts, electron_target_coords, muon_target_pts, muon_target_coords, jet_target_pts, jet_target_coords = separate_particles(target_event)
+    
+    separate_source_pt = [electron_source_pts, muon_source_pts, jet_source_pts]
+    separate_target_pt = [electron_target_pts, muon_target_pts, jet_target_pts]
+
+    separate_target_coords = [electron_source_coords, muon_source_coords, jet_source_coords]
+    separate_source_coords = [electron_target_coords, muon_target_coords, jet_target_coords]
+
+    separate_matrix = [e_matrix, mu_matrix, jet_matrix]
+    plt.figure(figsize=(15, 5))
+    for i in range(3):
+        if separate_matrix[i] is not None:
+
+            source_coords = separate_source_coords[i]
+            target_coords = separate_target_coords[i]
+
+            source_pts = separate_source_pt[i]
+            target_pts = separate_target_pt[i]
+            flow_matrix = separate_matrix[i]
+
+            plt.subplot(1, 3, i + 1)
+
+            plot_particle(source_coords, source_pts, i, state='source')
+            plot_particle(target_coords, target_pts, i, state='target')
+            plt.xlim(-5, 5)
+            plt.ylim(-3.5, 3.5)
+            plt.xlabel(r'$\eta$')
+            plt.ylabel(r'$\phi$')
+            plt.grid(True)
+            source_total_pt = source_pts.sum()
+            target_total_pt = target_pts.sum()
+            pt_diff = target_total_pt - source_total_pt
+            if pt_diff > 0:
+                source_coords = np.vstack((source_coords, np.zeros(source_coords.shape[1], dtype=np.float64)))
+                plt.scatter(0, 0, color="#CCFF00", marker='P', s=pt_diff * marker_scale, alpha=0.5, label='extra_source')
+            elif pt_diff < 0:
+                target_coords = np.vstack((target_coords, np.zeros(target_coords.shape[1], dtype=np.float64)))
+                plt.scatter(0, 0, color="#006400", marker='P', s=-pt_diff * marker_scale, alpha=0.5, label='extra_target')
+            # Take only non-zero flow values
+            index_send, index_receive = np.nonzero(flow_matrix)
+            # Plot arrows between source and target particles
+
+            sending_coords = source_coords[index_send]
+            receiving_coords = target_coords[index_receive]
+            for i, (receiving_coord, sending_coord) in enumerate(zip(receiving_coords, sending_coords)):
+                flow = flow_matrix[index_send[i], index_receive[i]]
+
+                plt.arrow(sending_coord[0], sending_coord[1],  # arrow base
+                        receiving_coord[0] - sending_coord[0], receiving_coord[1] - sending_coord[1],
+                        head_width=0.2, head_length=0.2, shape='left',
+                        fc='#FFD700', ec='#FFD700')  # arrow span
+
+                if verbose:
+                    print(f'From: {np.round(sending_coord, 2)} to {np.round(receiving_coord, 2)} with flow {flow:.2f}')
+
+            create_legend()
+    plt.suptitle("Total EMD: {:.2f}".format(total_emd))
+    plt.show()
+
 
 
 def plot_hists(events, title):
