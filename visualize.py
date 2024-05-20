@@ -110,8 +110,9 @@ def plot_particle(event_coord, event_pt, type, state='source'):
         ["#FFA07A", "#FF4500"],
         ["#D3D3D3", "#708090"]
     ])
-    event_coord = event_coord[event_pt != 0]
-    event_pt = event_pt[event_pt != 0]
+    event_coord = event_coord[event_pt[:] != 0]
+    event_pt = event_pt[event_pt[:] != 0]
+
 
     color_state = 1 if state == 'target' else 0
     plot_colors = particle_colors[:, color_state]
@@ -137,8 +138,8 @@ def plot_separate_optimal_transport(source_event, target_event, e_matrix, mu_mat
     separate_source_pt = [electron_source_pts, muon_source_pts, jet_source_pts]
     separate_target_pt = [electron_target_pts, muon_target_pts, jet_target_pts]
 
-    separate_target_coords = [electron_source_coords, muon_source_coords, jet_source_coords]
-    separate_source_coords = [electron_target_coords, muon_target_coords, jet_target_coords]
+    separate_source_coords = [electron_source_coords, muon_source_coords, jet_source_coords]
+    separate_target_coords = [electron_target_coords, muon_target_coords, jet_target_coords]
 
     separate_matrix = [e_matrix, mu_matrix, jet_matrix]
     plt.figure(figsize=(15, 5))
@@ -153,7 +154,6 @@ def plot_separate_optimal_transport(source_event, target_event, e_matrix, mu_mat
             flow_matrix = separate_matrix[i]
 
             plt.subplot(1, 3, i + 1)
-
             plot_particle(source_coords, source_pts, i, state='source')
             plot_particle(target_coords, target_pts, i, state='target')
             plt.xlim(-5, 5)
