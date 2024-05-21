@@ -28,6 +28,7 @@ def create_exp_bkg_events(ori_bkg_events, ori_sig_events, sig_lambda, n=100000):
     and return the background events from remaining pure background events.
     Background: X = {X1,...,X_mb}, Xi ∼ pb Signal: Y = {Y1,...,Y_ms}, Experimental: W = {W1,...,W_n},
     """
+    assert n * sig_lambda <= len(ori_sig_events)
     m_s = int(n * sig_lambda)
     m_b = n - m_s
     exp_events = np.concatenate((ori_bkg_events[:m_b], ori_sig_events[:m_s]))
@@ -182,14 +183,20 @@ class Bootstrap_Permutation:
         self.auc_exp = auc(self.h_W2, self.h_X2)
         self.mce_exp = mce(self.h_W2, self.h_X2, pi)
 
-    def bootstrap(self, n):
+    def bootstrap(self, n, verbose=True):
         lrt_null = np.zeros(n)
         auc_null = np.zeros(n)
         mce_null = np.zeros(n)
-        for i in tqdm(range(n)):
-            lrt_null[i] = lrt(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.pi)
-            auc_null[i] = auc(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)])
-            mce_null[i] = mce(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)], self.pi)
+        if verbose:
+            for i in tqdm(range(n)):
+                lrt_null[i] = lrt(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.pi)
+                auc_null[i] = auc(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)])
+                mce_null[i] = mce(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)], self.pi)
+        else:
+            for i in range(n):
+                lrt_null[i] = lrt(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.pi)
+                auc_null[i] = auc(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)])
+                mce_null[i] = mce(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)], self.pi)
         # P-value
         if self.lrt_exp > np.mean(lrt_null):
             lrt_p = np.mean(lrt_null > self.lrt_exp)
@@ -208,19 +215,29 @@ class Bootstrap_Permutation:
         self.mce_p_bootstrap = mce_p
         return lrt_null, auc_null, mce_null
         
-    def permutation(self, n):
+    def permutation(self, n, verbose=True):
         lrt_null = np.zeros(n)
         auc_null = np.zeros(n)
         mce_null = np.zeros(n)
         
-        for i in tqdm(range(n)):
-            sample1 = self.h_union.copy()
-            sample2 = self.h_union.copy()
-            np.random.shuffle(sample1)
-            np.random.shuffle(sample2)
-            lrt_null[i] = lrt(self.h_union[np.random.choice(self.n_union, self.n2, replace=False)], self.pi)
-            auc_null[i] = auc(sample1[:self.n2], sample1[self.n2:])
-            mce_null[i] = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
+        if verbose:
+            for i in tqdm(range(n)):
+                sample1 = self.h_union.copy()
+                sample2 = self.h_union.copy()
+                np.random.shuffle(sample1)
+                np.random.shuffle(sample2)
+                lrt_null[i] = lrt(self.h_union[np.random.choice(self.n_union, self.n2, replace=False)], self.pi)
+                auc_null[i] = auc(sample1[:self.n2], sample1[self.n2:])
+                mce_null[i] = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
+        else:
+            for i in range(n):
+                sample1 = self.h_union.copy()
+                sample2 = self.h_union.copy()
+                np.random.shuffle(sample1)
+                np.random.shuffle(sample2)
+                lrt_null[i] = lrt(self.h_union[np.random.choice(self.n_union, self.n2, replace=False)], self.pi)
+                auc_null[i] = auc(sample1[:self.n2], sample1[self.n2:])
+                mce_null[i] = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
         # P-value
         if self.lrt_exp > np.mean(lrt_null):
             lrt_p = np.mean(lrt_null > self.lrt_exp)
