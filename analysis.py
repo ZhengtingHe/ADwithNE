@@ -95,7 +95,7 @@ def get_dataloaders(X1, W1, val_ratio, normalizer):
     
     train_dataset = ClassifyDataset(W1_train, X1_train, normalizer=normalizer)
     val_dataset = ClassifyDataset(W1_val, X1_val, normalizer=normalizer)
-    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True, pin_memory=True, num_workers=8, prefetch_factor=64)
     val_dataloader = DataLoader(val_dataset, batch_size=256)
     return train_dataloader, val_dataloader
 
@@ -162,6 +162,8 @@ def mce(h_W, h_X, pi):
     w_sum = np.sum(h_W < pi)
     return 0.5 * ((1/m2) * x_sum + (1/n2) * w_sum)
 
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
 class Bootstrap_Permutation:
     def __init__(self, X2, W2, classifier, pi, normalizer):
         assert len(X2) == len(W2) # Make sure n2= m2
@@ -178,83 +180,58 @@ class Bootstrap_Permutation:
         self.h_W2 = h_hat(classifier, self.W2, normalizer=normalizer)
         self.h_union = h_hat(classifier, self.union, normalizer=normalizer)
 
-
         self.lrt_exp = lrt(self.h_W2, pi)
         self.auc_exp = auc(self.h_W2, self.h_X2)
         self.mce_exp = mce(self.h_W2, self.h_X2, pi)
 
-    def bootstrap(self, n, verbose=True):
-        lrt_null = np.zeros(n)
-        auc_null = np.zeros(n)
-        mce_null = np.zeros(n)
-        if verbose:
-            for i in tqdm(range(n)):
-                lrt_null[i] = lrt(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.pi)
-                auc_null[i] = auc(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)])
-                mce_null[i] = mce(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)], self.pi)
-        else:
-            for i in range(n):
-                lrt_null[i] = lrt(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.pi)
-                auc_null[i] = auc(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)])
-                mce_null[i] = mce(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)], self.pi)
+    def _bootstrap_iteration(self, _):
+        lrt_val = lrt(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.pi)
+        auc_val = auc(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)])
+        mce_val = mce(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)], self.pi)
+        return lrt_val, auc_val, mce_val
+
+    def bootstrap(self, n, verbose=True, n_jobs=10):
+        with ProcessPoolExecutor(max_workers=n_jobs) as executor:
+            results = list(tqdm(executor.map(self._bootstrap_iteration, range(n)), total=n, disable=not verbose))
+
+        lrt_null, auc_null, mce_null = zip(*results)
+
         # P-value
-        if self.lrt_exp > np.mean(lrt_null):
-            lrt_p = np.mean(lrt_null > self.lrt_exp)
-        else:
-            lrt_p = np.mean(lrt_null < self.lrt_exp)
-        if self.auc_exp > np.mean(auc_null):
-            auc_p = np.mean(auc_null > self.auc_exp)
-        else:
-            auc_p = np.mean(auc_null < self.auc_exp)
-        if self.mce_exp > np.mean(mce_null):
-            mce_p = np.mean(mce_null > self.mce_exp)
-        else:
-            mce_p = np.mean(mce_null < self.mce_exp)
+        lrt_p = np.mean(lrt_null > self.lrt_exp) if self.lrt_exp > np.mean(lrt_null) else np.mean(lrt_null < self.lrt_exp)
+        auc_p = np.mean(auc_null > self.auc_exp) if self.auc_exp > np.mean(auc_null) else np.mean(auc_null < self.auc_exp)
+        mce_p = np.mean(mce_null > self.mce_exp) if self.mce_exp > np.mean(mce_null) else np.mean(mce_null < self.mce_exp)
+
         self.lrt_p_bootstrap = lrt_p
         self.auc_p_bootstrap = auc_p
         self.mce_p_bootstrap = mce_p
+
         return lrt_null, auc_null, mce_null
-        
-    def permutation(self, n, verbose=True):
-        lrt_null = np.zeros(n)
-        auc_null = np.zeros(n)
-        mce_null = np.zeros(n)
-        
-        if verbose:
-            for i in tqdm(range(n)):
-                sample1 = self.h_union.copy()
-                sample2 = self.h_union.copy()
-                np.random.shuffle(sample1)
-                np.random.shuffle(sample2)
-                lrt_null[i] = lrt(self.h_union[np.random.choice(self.n_union, self.n2, replace=False)], self.pi)
-                auc_null[i] = auc(sample1[:self.n2], sample1[self.n2:])
-                mce_null[i] = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
-        else:
-            for i in range(n):
-                sample1 = self.h_union.copy()
-                sample2 = self.h_union.copy()
-                np.random.shuffle(sample1)
-                np.random.shuffle(sample2)
-                lrt_null[i] = lrt(self.h_union[np.random.choice(self.n_union, self.n2, replace=False)], self.pi)
-                auc_null[i] = auc(sample1[:self.n2], sample1[self.n2:])
-                mce_null[i] = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
+
+    def _permutation_iteration(self, _):
+        sample1 = self.h_union.copy()
+        sample2 = self.h_union.copy()
+        np.random.shuffle(sample1)
+        np.random.shuffle(sample2)
+        lrt_val = lrt(self.h_union[np.random.choice(self.n_union, self.n2, replace=False)], self.pi)
+        auc_val = auc(sample1[:self.n2], sample1[self.n2:])
+        mce_val = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
+        return lrt_val, auc_val, mce_val
+
+    def permutation(self, n, verbose=True, n_jobs=10):
+        with ProcessPoolExecutor(max_workers=n_jobs) as executor:
+            results = list(tqdm(executor.map(self._permutation_iteration, range(n)), total=n, disable=not verbose))
+
+        lrt_null, auc_null, mce_null = zip(*results)
+
         # P-value
-        if self.lrt_exp > np.mean(lrt_null):
-            lrt_p = np.mean(lrt_null > self.lrt_exp)
-        else:
-            lrt_p = np.mean(lrt_null < self.lrt_exp)
-        if self.auc_exp > np.mean(auc_null):
-            auc_p = np.mean(auc_null > self.auc_exp)
-        else:
-            auc_p = np.mean(auc_null < self.auc_exp)
-        if self.mce_exp > np.mean(mce_null):
-            mce_p = np.mean(mce_null > self.mce_exp)
-        else:
-            mce_p = np.mean(mce_null < self.mce_exp)
+        lrt_p = np.mean(lrt_null > self.lrt_exp) if self.lrt_exp > np.mean(lrt_null) else np.mean(lrt_null < self.lrt_exp)
+        auc_p = np.mean(auc_null > self.auc_exp) if self.auc_exp > np.mean(auc_null) else np.mean(auc_null < self.auc_exp)
+        mce_p = np.mean(mce_null > self.mce_exp) if self.mce_exp > np.mean(mce_null) else np.mean(mce_null < self.mce_exp)
+
         self.lrt_p_permutation = lrt_p
         self.auc_p_permutation = auc_p
         self.mce_p_permutation = mce_p
-        
+
         return lrt_null, auc_null, mce_null
     
 class LambdaEstimator:
