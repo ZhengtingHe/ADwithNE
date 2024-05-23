@@ -272,7 +272,7 @@ def plot_roc_curve(fpr_dict, tpr_dict, auc_dict, title):
     plt.legend(loc="lower right")
     plt.show()
 
-def plot_lambda(lambda_mean_dict, lambda_std_dict):
+def plot_lambda(lambda_mean_dict, lambda_std_dict, signal):
     x = np.array([float(key) for key in lambda_mean_dict.keys()])
     y = np.array([lambda_mean_dict[key] for key in lambda_mean_dict.keys()])
     yerr = np.array([lambda_std_dict[key] for key in lambda_std_dict.keys()])
@@ -281,5 +281,5 @@ def plot_lambda(lambda_mean_dict, lambda_std_dict):
     plt.plot(true_x, true_x, '--')
     plt.xlabel("True Lambda")
     plt.ylabel("Estimated Lambda")
-    plt.title("Estimated Lambda vs True Lambda")
+    plt.title("Estimated λ vs True λ for {}".format(signal))
     plt.show()
