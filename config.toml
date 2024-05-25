@@ -23,12 +23,16 @@ embed_size = 16  # Dimension of embedding space
 num_heads = 8    # Number of attention heads
 num_layers = 4   # Number of nn.TransformerEncoderLayer
 hidden_dim = 256 # Dimension of the feedforward network model in nn.TransformerEncoder
-output_dim = 4  # Final dimension of the output embedding
+output_dim = 8  # Final dimension of the output embedding
 
 [train]
 lr = 1e-3
 weight_decay = 1e-5
 batch_size = 256
+
+[lambda_estimate]
+T = 0.5
+n_bins = 20
 
 [sig_color]
 leptoquark = "#FFBE7A" 

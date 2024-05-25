@@ -5,6 +5,7 @@ import sys
 from torch.utils.data import Dataset, DataLoader
 from sklearn import metrics
 from scipy.optimize import curve_fit
+from utils import load_toml_config
 
 sys.path.append("..")
 
@@ -174,7 +175,7 @@ def mce(h_W, h_X, pi):
     w_sum = np.sum(h_W < pi)
     return 0.5 * ((1/m2) * x_sum + (1/n2) * w_sum)
 
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 class Bootstrap_Permutation:
     def __init__(self, X2, W2, classifier, pi, normalizer):
@@ -246,8 +247,9 @@ class Bootstrap_Permutation:
 
         return lrt_null, auc_null, mce_null
     
+lambda_est_params = load_toml_config("lambda_estimate")
 class LambdaEstimator:
-    def __init__(self, X2, W2, classifier, normalizer, T=0.5, n_bins=20):
+    def __init__(self, X2, W2, classifier, normalizer, T=lambda_est_params['T'], n_bins=lambda_est_params['n_bins']):
         assert len(X2) == len(W2) # Make sure n2= m2
         self.m2 = len(X2)
         self.n2 = len(W2)
