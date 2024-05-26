@@ -50,6 +50,17 @@ def create_exp_bkg_from_multi_sig(events, sig_formula, n=100000):
     np.random.shuffle(bkg_events)
     return exp_events, bkg_events
 
+def create_exp_null(bkg_events, n=100000):
+    """
+    Create pure experiment events for estimation of null distribution
+    """
+    choosen_events = bkg_events[np.random.choice(len(bkg_events), 2 * n, replace=False)]
+    exp_events = choosen_events[:n]
+    np.random.shuffle(exp_events)
+    bkg_events = choosen_events[n:]
+    np.random.shuffle(bkg_events)
+    return exp_events, bkg_events
+
 def train_test_split(exp_events, bkg_events, test_ratio=0.2):
     """
     Split background data X = {X1,...,X_mb} into X1 and X2 of sizes m1 and m2 respectively.
