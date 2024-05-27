@@ -119,7 +119,7 @@ def get_dataloaders(X1, W1, val_ratio, normalizer):
     
     train_dataset = ClassifyDataset(W1_train, X1_train, normalizer=normalizer)
     val_dataset = ClassifyDataset(W1_val, X1_val, normalizer=normalizer)
-    train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True, pin_memory=True, num_workers=8, prefetch_factor=64)
+    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, pin_memory=True, num_workers=8, prefetch_factor=64)
     val_dataloader = DataLoader(val_dataset, batch_size=256)
     return train_dataloader, val_dataloader
 
@@ -241,7 +241,7 @@ class Bootstrap_Permutation:
         mce_val = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
         return lrt_val, auc_val, mce_val
 
-    def permutation(self, n, verbose=True, n_jobs=10):
+    def permutation(self, n, verbose=True, n_jobs=12):
         with ProcessPoolExecutor(max_workers=n_jobs) as executor:
             results = list(tqdm(executor.map(self._permutation_iteration, range(n)), total=n, disable=not verbose))
 

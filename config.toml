@@ -15,7 +15,7 @@ particle_one_hot = true
 n_pair = 2000000
 norm = false
 save_emd = true
-pid_method= 'separate' # 'separate' or 'one-hot'
+pid_method= 'one-hot' # 'separate' or 'one-hot'
 
 [Transformer]
 feature_size = 3  # pT, eta, phi
@@ -23,7 +23,7 @@ embed_size = 16  # Dimension of embedding space
 num_heads = 8    # Number of attention heads
 num_layers = 4   # Number of nn.TransformerEncoderLayer
 hidden_dim = 256 # Dimension of the feedforward network model in nn.TransformerEncoder
-output_dim = 8  # Final dimension of the output embedding
+output_dim = 4  # Final dimension of the output embedding
 
 [train]
 lr = 1e-3
