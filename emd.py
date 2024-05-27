@@ -100,12 +100,12 @@ def ot_within_type(source_pt, target_pt, source_coords, target_coords, n_iter_ma
     if pt_diff > 0:
         source_pt = np.hstack((source_pt, pt_diff))
         source_coords_extra = np.vstack((source_coords, np.zeros(source_coords.shape[1], dtype=np.float64)))
-        thetas = cdist(source_coords_extra, target_coords) / R
+        thetas = cdist(source_coords_extra, target_coords, periodic_phi_dist) / R
         thetas[-1, :] = 1.0
     elif pt_diff < 0:
         target_pt = np.hstack((target_pt, -pt_diff))
         target_coords_extra = np.vstack((target_coords, np.zeros(target_coords.shape[1], dtype=np.float64)))
-        thetas = cdist(source_coords, target_coords_extra) / R
+        thetas = cdist(source_coords, target_coords_extra, periodic_phi_dist) / R
         thetas[:, -1] = 1.0
     else:
         thetas = cdist(source_coords, target_coords) / R
