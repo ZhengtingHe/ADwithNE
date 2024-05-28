@@ -8,6 +8,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
 from emd import emd_pot, sep_emd
+from concurrent.futures import ProcessPoolExecutor
 
 
 def load_config():
@@ -79,6 +80,36 @@ def sample_pairs_with_emd(events, n_pairs=None, particle_type_scale=0, norm=Fals
             emds[i] = sep_emd(events[pair[0]], events[pair[1]])
     return pairs, emds
 
+def compute_emd_one_hot(pair, events, particle_type_scale, norm):
+    return emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm, particle_one_hot=True)
+
+def compute_emd_separate(pair, events):
+    return sep_emd(events[pair[0]], events[pair[1]])
+
+def sample_pairs_with_emd_multi(events, n_pairs=None, particle_type_scale=0, norm=False, pid_method='one-hot', n_jobs=4):
+    n_events = len(events)
+    if n_pairs is None:
+        n_pairs = 5 * n_events
+    pairs = sample_pairs(n_events, n_pairs)
+    emds = np.zeros(n_pairs)
+
+    if pid_method == 'one-hot':
+        compute_emd = compute_emd_one_hot
+        compute_emd_args = (events, particle_type_scale, norm)
+    elif pid_method == 'separate':
+        compute_emd = compute_emd_separate
+        compute_emd_args = (events,)
+    else:
+        raise ValueError(f"Unsupported pid_method: {pid_method}")
+
+    def compute_emd_wrapper(pair):
+        return compute_emd(pair, *compute_emd_args)
+
+    with ProcessPoolExecutor(max_workers=n_jobs) as executor:
+        results = list(tqdm(executor.map(compute_emd_wrapper, pairs), total=n_pairs))
+    
+    emds = np.array(results)
+    return pairs, emds
 
 def store_emds_with_pairs(emds, pairs, file_name):
     f = h5py.File(os.path.join("..","generated_data", file_name), "w")

@@ -208,10 +208,11 @@ class Bootstrap_Permutation:
         self.auc_exp = auc(self.h_W2, self.h_X2)
         self.mce_exp = mce(self.h_W2, self.h_X2, pi)
 
-    def _bootstrap_iteration(self, _):
-        lrt_val = lrt(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.pi)
-        auc_val = auc(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)])
-        mce_val = mce(self.h_union[np.random.randint(0, self.n_union, self.n2)], self.h_union[np.random.randint(0, self.n_union, self.m2)], self.pi)
+    def _bootstrap_iteration(self, seed):
+        rng = np.random.RandomState(seed)
+        lrt_val = lrt(self.h_union[rng.randint(0, self.n_union, self.n2)], self.pi)
+        auc_val = auc(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)])
+        mce_val = mce(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)], self.pi)
         return lrt_val, auc_val, mce_val
 
     def bootstrap(self, n, verbose=True, n_jobs=10):
@@ -231,12 +232,13 @@ class Bootstrap_Permutation:
 
         return lrt_null, auc_null, mce_null
 
-    def _permutation_iteration(self, _):
+    def _permutation_iteration(self, seed):
+        rng = np.random.RandomState(seed)
         sample1 = self.h_union.copy()
         sample2 = self.h_union.copy()
-        np.random.shuffle(sample1)
-        np.random.shuffle(sample2)
-        lrt_val = lrt(self.h_union[np.random.choice(self.n_union, self.n2, replace=False)], self.pi)
+        rng.shuffle(sample1)
+        rng.shuffle(sample2)
+        lrt_val = lrt(self.h_union[rng.choice(self.n_union, self.n2, replace=False)], self.pi)
         auc_val = auc(sample1[:self.n2], sample1[self.n2:])
         mce_val = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
         return lrt_val, auc_val, mce_val

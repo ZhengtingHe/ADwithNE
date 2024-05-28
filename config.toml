@@ -10,12 +10,13 @@ neutral_Higgs = "hToTauTau_13TeV_PU20_filtered.h5"
 charged_Higgs = "hChToTauNu_13TeV_PU20_filtered.h5"
 
 [EMD] # Parameters in calculation of Energy Mover's Distance
-particle_type_scale = 10
+particle_type_scale = 20
 particle_one_hot = true
 n_pair = 2000000
 norm = false
 save_emd = true
 pid_method= 'separate' # 'separate' or 'one-hot'
+# pid_method= 'one-hot' # 'separate' or 'one-hot'
 
 [Transformer]
 feature_size = 3  # pT, eta, phi
