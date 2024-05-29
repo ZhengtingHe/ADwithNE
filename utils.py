@@ -1,5 +1,6 @@
 import toml
 import os
+import sys
 def select_non_zero_constituents(event):
     # Select only constituents with non-zero pT
     return event[event[:, 0] != 0]
@@ -32,3 +33,12 @@ def load_toml_config(key):
     with open(os.path.join(module_path, 'config.toml'), 'r') as f:
         config = toml.load(f)
     return config[key]
+
+def get_database_path():
+    config = load_toml_config("data_path")
+    if sys.platform.startswith('linux'):
+        return config['linux']
+    elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
+        return config['windows']
+    else:
+        raise Exception("Unsupported OS")

@@ -215,9 +215,9 @@ class Bootstrap_Permutation:
         mce_val = mce(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)], self.pi)
         return lrt_val, auc_val, mce_val
 
-    def bootstrap(self, n, verbose=True, n_jobs=10):
+    def bootstrap(self, n, verbose=True, n_jobs=24):
         with ProcessPoolExecutor(max_workers=n_jobs) as executor:
-            results = list(tqdm(executor.map(self._bootstrap_iteration, range(n)), total=n, disable=not verbose))
+            results = list(tqdm(executor.map(self._bootstrap_iteration, range(n), chunksize=50), total=n, disable=not verbose))
 
         lrt_null, auc_null, mce_null = zip(*results)
 
@@ -243,9 +243,9 @@ class Bootstrap_Permutation:
         mce_val = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
         return lrt_val, auc_val, mce_val
 
-    def permutation(self, n, verbose=True, n_jobs=12):
+    def permutation(self, n, verbose=True, n_jobs=24):
         with ProcessPoolExecutor(max_workers=n_jobs) as executor:
-            results = list(tqdm(executor.map(self._permutation_iteration, range(n)), total=n, disable=not verbose))
+            results = list(tqdm(executor.map(self._permutation_iteration, range(n), chunksize=50), total=n, disable=not verbose))
 
         lrt_null, auc_null, mce_null = zip(*results)
 

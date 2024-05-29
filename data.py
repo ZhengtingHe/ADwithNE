@@ -2,13 +2,13 @@ import json
 import sys
 import h5py
 import os
-import pandas as pd
 import numpy as np
 from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
 from emd import emd_pot, sep_emd
 from concurrent.futures import ProcessPoolExecutor
+
 
 
 def load_config():
@@ -80,13 +80,14 @@ def sample_pairs_with_emd(events, n_pairs=None, particle_type_scale=0, norm=Fals
             emds[i] = sep_emd(events[pair[0]], events[pair[1]])
     return pairs, emds
 
-def compute_emd_one_hot(pair, events, particle_type_scale, norm):
-    return emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm, particle_one_hot=True)
 
-def compute_emd_separate(pair, events):
-    return sep_emd(events[pair[0]], events[pair[1]])
 
-def sample_pairs_with_emd_multi(events, n_pairs=None, particle_type_scale=0, norm=False, pid_method='one-hot', n_jobs=4):
+def sample_pairs_with_emd_multi(events, n_pairs=None, particle_type_scale=0, norm=False, pid_method='one-hot', n_jobs=12):
+    def compute_emd_one_hot(pair, events, particle_type_scale, norm):
+        return emd_pot(events[pair[0]], events[pair[1]], particle_type_scale=particle_type_scale, norm=norm, particle_one_hot=True)
+
+    def compute_emd_separate(pair, events):
+        return sep_emd(events[pair[0]], events[pair[1]])
     n_events = len(events)
     if n_pairs is None:
         n_pairs = 5 * n_events
