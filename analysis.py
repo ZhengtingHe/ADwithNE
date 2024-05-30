@@ -32,9 +32,11 @@ def create_exp_bkg_events(ori_bkg_events, ori_sig_events, sig_lambda, n=100000):
     assert n * sig_lambda <= len(ori_sig_events)
     m_s = int(n * sig_lambda)
     m_b = n - m_s
-    exp_events = np.concatenate((ori_bkg_events[:m_b], ori_sig_events[:m_s]))
+    choosen_bkg_events = ori_bkg_events[np.random.choice(len(ori_bkg_events), m_b + n, replace=False)]
+    choosen_sig_events = ori_sig_events[np.random.choice(len(ori_sig_events), m_s, replace=False)]
+    exp_events = np.concatenate((choosen_bkg_events[:m_b], choosen_sig_events))
     np.random.shuffle(exp_events)
-    bkg_events = ori_bkg_events[m_b:m_b + n]
+    bkg_events = choosen_bkg_events[m_b:m_b + n]
     np.random.shuffle(bkg_events)
     return exp_events, bkg_events
 
