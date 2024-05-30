@@ -135,3 +135,32 @@ class particleTransformer(nn.Module):
         #print(self.fcblock)
         output = self.fcblock(output)
         return output
+    
+
+class BaselineTransformer(nn.Module):
+    def __init__(self, feature_size, embed_size, num_heads, hidden_dim, num_layers):
+        super(ParticleEventTransformer, self).__init__()
+        self.particle_embedding = nn.Linear(feature_size, embed_size)
+        self.pos_encoder = ParticlePositionalEncoding(embed_size)
+        encoder_layers = TransformerEncoderLayer(embed_size, num_heads, hidden_dim)
+        self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers)
+        self.output_layer = nn.Linear(embed_size * 19, 1)
+        self.embed_size = embed_size
+        self.init_weights()
+
+    def init_weights(self) -> None:
+        initrange = 0.1
+        self.particle_embedding.weight.data.uniform_(-initrange, initrange)
+        self.output_layer.bias.data.zero_()
+        self.output_layer.weight.data.uniform_(-initrange, initrange)
+
+    def forward(self, x):
+        x = self.particle_embedding(x)  # [batch_size, 19, embed_size]
+        x = x.permute(1, 0, 2)  # Transformer expects [seq_len, batch_size, embedding_dim]
+        x = self.pos_encoder(x * math.sqrt(self.embed_size))
+        x = self.transformer_encoder(x)
+        x = x.permute(1, 0, 2)  # Switch back to [batch_size, seq_len, embedding_dim]
+        x = x.reshape(x.shape[0], -1)  # Flatten
+        x = self.output_layer(x)
+        x = nn.Sigmoid(x)
+        return x
