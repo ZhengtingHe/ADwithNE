@@ -109,7 +109,7 @@ class ClassifyDataset(Dataset):
         return self.events[idx], self.labels[idx]
     
 
-def get_dataloaders(X1, W1, val_ratio, normalizer):
+def get_dataloaders(X1, W1, val_ratio, normalizer=None):
     """
     Get dataloaders for training and validation sets.
     """

@@ -139,12 +139,13 @@ class particleTransformer(nn.Module):
 
 class BaselineTransformer(nn.Module):
     def __init__(self, feature_size, embed_size, num_heads, hidden_dim, num_layers):
-        super(ParticleEventTransformer, self).__init__()
+        super(BaselineTransformer, self).__init__()
         self.particle_embedding = nn.Linear(feature_size, embed_size)
         self.pos_encoder = ParticlePositionalEncoding(embed_size)
         encoder_layers = TransformerEncoderLayer(embed_size, num_heads, hidden_dim)
         self.transformer_encoder = TransformerEncoder(encoder_layers, num_layers)
         self.output_layer = nn.Linear(embed_size * 19, 1)
+        self.sigmoid = nn.Sigmoid()
         self.embed_size = embed_size
         self.init_weights()
 
@@ -162,5 +163,5 @@ class BaselineTransformer(nn.Module):
         x = x.permute(1, 0, 2)  # Switch back to [batch_size, seq_len, embedding_dim]
         x = x.reshape(x.shape[0], -1)  # Flatten
         x = self.output_layer(x)
-        x = nn.Sigmoid(x)
-        return x
+        x = self.sigmoid(x)
+        return x.reshape(-1)
