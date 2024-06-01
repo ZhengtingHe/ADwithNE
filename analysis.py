@@ -191,7 +191,7 @@ def mce(h_W, h_X, pi):
 from concurrent.futures import ProcessPoolExecutor
 
 class Bootstrap_Permutation:
-    def __init__(self, X2, W2, classifier, pi, normalizer):
+    def __init__(self, X2, W2, classifier, pi, normalizer=None):
         assert len(X2) == len(W2) # Make sure n2= m2
         self.m2 = len(X2)
         self.n2 = len(W2)
@@ -264,7 +264,7 @@ class Bootstrap_Permutation:
     
 lambda_est_params = load_toml_config("lambda_estimate")
 class LambdaEstimator:
-    def __init__(self, X2, W2, classifier, normalizer, T=lambda_est_params['T'], n_bins=lambda_est_params['n_bins']):
+    def __init__(self, X2, W2, classifier, normalizer=None, T=lambda_est_params['T'], n_bins=lambda_est_params['n_bins']):
         assert len(X2) == len(W2) # Make sure n2= m2
         self.m2 = len(X2)
         self.n2 = len(W2)
