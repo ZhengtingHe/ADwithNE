@@ -173,20 +173,29 @@ def lrt(h_W, pi):
     return np.log((1 - pi) / pi) + (1 / n2) * np.sum(np.log(h_W / (1 - h_W)))
 
 
+# def auc(h_W, h_X):
+#     m2 = len(h_X)
+#     n2 = len(h_W)
+#     result = h_W[:, None] > h_X[None, :]
+#     sum = np.sum(result)
+#     return sum / (m2 * n2)
+
 def auc(h_W, h_X):
-    m2 = len(h_X)
-    n2 = len(h_W)
     result = h_W[:, None] > h_X[None, :]
-    sum = np.sum(result)
-    return sum / (m2 * n2)
+    return np.mean(result)
     
 
+# def mce(h_W, h_X, pi):
+#     m2 = len(h_X)
+#     n2 = len(h_W)
+#     x_sum = np.sum(h_X > pi)
+#     w_sum = np.sum(h_W < pi)
+#     return 0.5 * ((1/m2) * x_sum + (1/n2) * w_sum)
+
 def mce(h_W, h_X, pi):
-    m2 = len(h_X)
-    n2 = len(h_W)
-    x_sum = np.sum(h_X > pi)
-    w_sum = np.sum(h_W < pi)
-    return 0.5 * ((1/m2) * x_sum + (1/n2) * w_sum)
+    x_sum = np.mean(h_X > pi)
+    w_sum = np.mean(h_W < pi)
+    return 0.5 * (x_sum + w_sum)
 
 from concurrent.futures import ProcessPoolExecutor
 
@@ -211,15 +220,21 @@ class Bootstrap_Permutation:
         self.mce_exp = mce(self.h_W2, self.h_X2, pi)
 
     def _bootstrap_iteration(self, seed):
-        rng = np.random.RandomState(seed)
-        lrt_val = lrt(self.h_union[rng.randint(0, self.n_union, self.n2)], self.pi)
-        auc_val = auc(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)])
-        mce_val = mce(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)], self.pi)
+        rng = np.random.default_rng(seed)
+        idxs = rng.integers(0, self.n_union, self.n2 + self.m2)
+        h_union_sample = self.h_union[idxs]
+        lrt_val = lrt(h_union_sample[:self.n2], self.pi)
+        auc_val = auc(h_union_sample[:self.n2], h_union_sample[self.n2:])
+        mce_val = mce(h_union_sample[:self.n2], h_union_sample[self.n2:], self.pi)
         return lrt_val, auc_val, mce_val
+        # lrt_val = lrt(self.h_union[rng.randint(0, self.n_union, self.n2)], self.pi)
+        # auc_val = auc(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)])
+        # mce_val = mce(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)], self.pi)
+        # return lrt_val, auc_val, mce_val
 
     def bootstrap(self, n, verbose=True, n_jobs=24):
         with ProcessPoolExecutor(max_workers=n_jobs) as executor:
-            results = list(tqdm(executor.map(self._bootstrap_iteration, range(n), chunksize=50), total=n, disable=not verbose))
+            results = list(tqdm(executor.map(self._bootstrap_iteration, range(n), chunksize=100), total=n, disable=not verbose))
 
         lrt_null, auc_null, mce_null = zip(*results)
 
@@ -235,19 +250,17 @@ class Bootstrap_Permutation:
         return lrt_null, auc_null, mce_null
 
     def _permutation_iteration(self, seed):
-        rng = np.random.RandomState(seed)
-        sample1 = self.h_union.copy()
-        sample2 = self.h_union.copy()
-        rng.shuffle(sample1)
-        rng.shuffle(sample2)
-        lrt_val = lrt(self.h_union[rng.choice(self.n_union, self.n2, replace=False)], self.pi)
-        auc_val = auc(sample1[:self.n2], sample1[self.n2:])
-        mce_val = mce(sample2[:self.n2], sample2[self.n2:], self.pi)
+        rng = np.random.default_rng(seed)
+        perm_indices = rng.permutation(self.n_union)
+        h_perm = self.h_union[perm_indices]
+        lrt_val = lrt(h_perm[:self.n2], self.pi)
+        auc_val = auc(h_perm[:self.n2], h_perm[self.n2:])
+        mce_val = mce(h_perm[:self.n2], h_perm[self.n2:], self.pi)
         return lrt_val, auc_val, mce_val
 
     def permutation(self, n, verbose=True, n_jobs=24):
         with ProcessPoolExecutor(max_workers=n_jobs) as executor:
-            results = list(tqdm(executor.map(self._permutation_iteration, range(n), chunksize=50), total=n, disable=not verbose))
+            results = list(tqdm(executor.map(self._permutation_iteration, range(n), chunksize=100), total=n, disable=not verbose))
 
         lrt_null, auc_null, mce_null = zip(*results)
 
