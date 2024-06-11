@@ -276,6 +276,11 @@ class Bootstrap_Permutation:
         return lrt_null, auc_null, mce_null
     
 lambda_est_params = load_toml_config("lambda_estimate")
+
+def poisson(t, beta0, beta1):
+    return np.exp(beta0 + beta1 * t)
+def exp_const(_, beta0):
+    return np.exp(beta0)
 class LambdaEstimator:
     def __init__(self, X2, W2, classifier, normalizer=None, T=lambda_est_params['T'], n_bins=lambda_est_params['n_bins']):
         assert len(X2) == len(W2) # Make sure n2= m2
@@ -295,10 +300,6 @@ class LambdaEstimator:
         assert T in self.bins
         self.fit_start_idx = np.where(self.bins == T)[0][0]
         # fit a Poisson regression f(t) = exp(β0+ β1t)
-        def poisson(t, beta0, beta1):
-            return np.exp(beta0 + beta1 * t)
-        def exp_const(_, beta0):
-            return np.exp(beta0)
         opt, _ = curve_fit(poisson, self.bins[self.fit_start_idx:], self.H_t[self.fit_start_idx-1:], p0=[0, 0])
         self.beta0, self.beta1 = opt
         # Constrain β1 ≤ 0, refit β0 when β1 > 0
@@ -308,4 +309,22 @@ class LambdaEstimator:
             self.beta0 = opt[0]
         self.estimated_H_t = poisson(self.bins[self.fit_start_idx:], self.beta0, self.beta1)
         self.estimated_lambda = 1 - poisson(1, self.beta0, self.beta1)
+
+    def fit(self, T, n_bins):
+        self.T = T
+        self.bins = np.linspace(0, 1, n_bins+1)
+        self.H_t = np.histogram(self.rho_W, bins=self.bins, density=True)[0]
+        assert T in self.bins
+        self.fit_start_idx = np.where(self.bins == T)[0][0]
+        # fit a Poisson regression f(t) = exp(β0+ β1t)
+        opt, _ = curve_fit(poisson, self.bins[self.fit_start_idx:], self.H_t[self.fit_start_idx-1:], p0=[0, 0])
+        self.beta0, self.beta1 = opt
+        # Constrain β1 ≤ 0, refit β0 when β1 > 0
+        if self.beta1 > 0:
+            self.beta1 = 0
+            opt, _ = curve_fit(exp_const, self.bins[self.fit_start_idx:], self.H_t[self.fit_start_idx-1:], p0=[0])
+            self.beta0 = opt[0]
+        self.estimated_H_t = poisson(self.bins[self.fit_start_idx:], self.beta0, self.beta1)
+        self.estimated_lambda = 1 - poisson(1, self.beta0, self.beta1)
+        return self.estimated_lambda
 
