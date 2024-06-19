@@ -138,8 +138,9 @@ def train_model(net, optimizer,
                 print("<<<<<< reach best {0} : {1} >>>>>>".format(monitor,
                                                                 arr_scores[best_score_idx]))
         if len(arr_scores) - best_score_idx > patience:
-            print("<<<<<< {} without improvement in {} epoch, early stopping >>>>>>".format(
-                monitor, patience))
+            if verbose:
+                print("<<<<<< {} without improvement in {} epoch, early stopping >>>>>>".format(
+                    monitor, patience))
             break
         if scheduler:
             scheduler.step()
