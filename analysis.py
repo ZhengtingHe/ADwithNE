@@ -109,7 +109,7 @@ class ClassifyDataset(Dataset):
         return self.events[idx], self.labels[idx]
     
 
-def get_dataloaders(X1, W1, val_ratio, normalizer=None):
+def get_dataloaders(X1, W1, val_ratio, normalizer=None, train_batch_size=64, val_batch_size=256):
     """
     Get dataloaders for training and validation sets.
     """
@@ -121,8 +121,8 @@ def get_dataloaders(X1, W1, val_ratio, normalizer=None):
     
     train_dataset = ClassifyDataset(W1_train, X1_train, normalizer=normalizer)
     val_dataset = ClassifyDataset(W1_val, X1_val, normalizer=normalizer)
-    train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True, pin_memory=True, num_workers=8, prefetch_factor=64)
-    val_dataloader = DataLoader(val_dataset, batch_size=256)
+    train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=16, prefetch_factor=128)
+    val_dataloader = DataLoader(val_dataset, batch_size=val_batch_size, pin_memory=True)
     return train_dataloader, val_dataloader
 
 @torch.no_grad()
@@ -209,11 +209,10 @@ class Bootstrap_Permutation:
 
         self.X2 = X2
         self.W2 = W2
-        self.union = np.concatenate((self.X2, self.W2))
 
         self.h_X2 = h_hat(classifier, self.X2, normalizer=normalizer)
         self.h_W2 = h_hat(classifier, self.W2, normalizer=normalizer)
-        self.h_union = h_hat(classifier, self.union, normalizer=normalizer)
+        self.h_union = np.concatenate((self.h_X2, self.h_W2))
 
         self.lrt_exp = lrt(self.h_W2, pi)
         self.auc_exp = auc(self.h_W2, self.h_X2)

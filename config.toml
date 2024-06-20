@@ -9,25 +9,24 @@ leptoquark = "leptoquark_LOWMASS_lepFilter_13TeV_filtered.h5"
 neutral_Higgs = "hToTauTau_13TeV_PU20_filtered.h5"
 charged_Higgs = "hChToTauNu_13TeV_PU20_filtered.h5"
 
-[EMD] # Parameters in calculation of Energy Mover's Distance
+[EMD]
 particle_type_scale = 20
 particle_one_hot = true
 n_pair = 2000000
 norm = false
 save_emd = true
-pid_method= 'separate' # 'separate' or 'one-hot'
-# pid_method= 'one-hot' # 'separate' or 'one-hot'
+pid_method = "separate"
 
 [Transformer]
-feature_size = 3  # pT, eta, phi
-embed_size = 16  # Dimension of embedding space
-num_heads = 8    # Number of attention heads
-num_layers = 4   # Number of nn.TransformerEncoderLayer
-hidden_dim = 256 # Dimension of the feedforward network model in nn.TransformerEncoder
-output_dim = 4  # Final dimension of the output embedding
+feature_size = 3
+embed_size = 16
+num_heads = 8
+num_layers = 4
+hidden_dim = 256
+output_dim = 4
 
 [train]
-lr = 1e-3
+lr = 0.001
 weight_decay = 1e-5
 batch_size = 256
 
@@ -36,16 +35,21 @@ T = 0.5
 n_bins = 20
 
 [sig_color]
-leptoquark = "#FFBE7A" 
+leptoquark = "#FFBE7A"
 neutral_boson = "#8ECFC9"
 neutral_Higgs = "#FA7F6F"
 charged_Higgs = "#D4ACF4"
 SM = "#B8C7D1"
 
 [event_color]
-Electron = '#4D9DE0' 
-Muon = '#E15554' 
-Electron_Muon = '#3BB273' 
-Electron_Jets = '#7768AE' 
-Muon_Jets = '#EB8A44' 
-Electron_Muon_Jets = '#FFC15E' 
+Electron = "#4D9DE0"
+Muon = "#E15554"
+Electron_Muon = "#3BB273"
+Electron_Jets = "#7768AE"
+Muon_Jets = "#EB8A44"
+Electron_Muon_Jets = "#FFC15E"
+
+[threshold]
+lrt = 0.25804961703905516
+mce = 0.47750000000000004
+auc = 0.5433262499999999
