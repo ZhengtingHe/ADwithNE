@@ -109,7 +109,7 @@ class ClassifyDataset(Dataset):
         return self.events[idx], self.labels[idx]
     
 
-def get_dataloaders(X1, W1, val_ratio, normalizer=None, train_batch_size=64, val_batch_size=256):
+def get_dataloaders(X1, W1, val_ratio, normalizer=None, train_batch_size=64, val_batch_size=256, num_workers=16, prefetch_factor=128):
     """
     Get dataloaders for training and validation sets.
     """
@@ -121,8 +121,8 @@ def get_dataloaders(X1, W1, val_ratio, normalizer=None, train_batch_size=64, val
     
     train_dataset = ClassifyDataset(W1_train, X1_train, normalizer=normalizer)
     val_dataset = ClassifyDataset(W1_val, X1_val, normalizer=normalizer)
-    train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=16, prefetch_factor=128)
-    val_dataloader = DataLoader(val_dataset, batch_size=val_batch_size, pin_memory=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=num_workers, prefetch_factor=prefetch_factor)
+    val_dataloader = DataLoader(val_dataset, batch_size=val_batch_size, pin_memory=True, num_workers=num_workers, prefetch_factor=prefetch_factor)
     return train_dataloader, val_dataloader
 
 @torch.no_grad()
