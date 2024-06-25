@@ -49,6 +49,10 @@ Electron_Jets = "#7768AE"
 Muon_Jets = "#EB8A44"
 Electron_Muon_Jets = "#FFC15E"
 
+[hypothesis_test]
+n = 200000
+n_null = 1000
+
 [threshold]
 lrt = 0.034097843445638314
 mce = 0.49787375
