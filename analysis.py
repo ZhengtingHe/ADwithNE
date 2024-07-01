@@ -41,12 +41,15 @@ def create_exp_bkg_events(ori_bkg_events, ori_sig_events, sig_lambda, n=100000):
     return exp_events, bkg_events
 
 def create_exp_bkg_from_multi_sig(events, sig_formula, n=100000):
+    """
+    Create experiment events by combining multiple signal events with signal strength lambda given by dictionary sig_formula
+    """
     assert type(sig_formula) == dict
     for key, value in sig_formula.items():
         assert value * n <= len(events[key])
     bkg_ratio = 1 - sum(sig_formula.values())
     m_b = int(n * bkg_ratio)
-    exp_events = np.concatenate([events[key][:int(n * value)] for key, value in sig_formula.items()] + [events["bkg"][:m_b]])
+    exp_events = np.concatenate([events[key][:int(n * value)] for key, value in sig_formula.items()] + [events['SM'][:m_b]])
     np.random.shuffle(exp_events)
     bkg_events = events["SM"][m_b:m_b + n]
     np.random.shuffle(bkg_events)
