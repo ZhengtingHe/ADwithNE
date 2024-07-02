@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import Dataset
 from emd import emd_pot, sep_emd
 from concurrent.futures import ProcessPoolExecutor
+from utils import load_toml_config
 
 
 
@@ -18,11 +19,11 @@ def load_config():
 
 
 def get_database_path():
-    config = load_config()
+    config = load_toml_config('data_path')
     if sys.platform.startswith('linux'):
-        return config['linux']['database_path']
+        return config['linux']
     elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
-        return config['windows']['database_path']
+        return config['windows']
     else:
         raise Exception("Unsupported OS")
 

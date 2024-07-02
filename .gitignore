@@ -161,3 +161,4 @@ cython_debug/
 demo/checkpoint.pt
 model/*
 generated_data/*
+embedding_points.h5
