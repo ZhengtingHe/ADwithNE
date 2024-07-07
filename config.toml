@@ -51,7 +51,7 @@ Electron_Muon_Jets = "#FFC15E"
 
 [hypothesis_test]
 n = 500000
-n_null = 1000
+n_null = 2000
 
 [threshold]
 lrt = 0.015408406195875222
