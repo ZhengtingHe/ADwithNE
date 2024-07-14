@@ -45,9 +45,13 @@ def read_h5_file(path, file_name, datatype='Particles'):
     
 
 def select_events(events, criteria):
-    # crtieria [bool, bool, bool] for [electron, muon, jets]
-    index = (events[:,1,3] == (2 * criteria[0])) & (events[:,5,3] == (3 * criteria[1])) & (events[:,9,3] == (4 * criteria[2]))
-    return index
+    # crtieria [int, int, int] for number of [electron, muon, jets]
+    count_elctron = np.sum(events[:,:,3] == 2, axis=1)
+    count_muon = np.sum(events[:,:,3] == 3, axis=1)
+    count_jet = np.sum(events[:,:,3] == 4, axis=1)
+
+    mask = (count_elctron == criteria[0]) & (count_muon == criteria[1]) & (count_jet == criteria[2])
+    return events[mask]
 
 
 def sample_pairs(n_events, n_pairs):
