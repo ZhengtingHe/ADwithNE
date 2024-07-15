@@ -50,8 +50,8 @@ def select_events(events, criteria):
     count_muon = np.sum(events[:,:,3] == 3, axis=1)
     count_jet = np.sum(events[:,:,3] == 4, axis=1)
 
-    mask = (count_elctron == criteria[0]) & (count_muon == criteria[1]) & (count_jet == criteria[2])
-    return events[mask]
+    index = (count_elctron == criteria[0]) & (count_muon == criteria[1]) & (count_jet == criteria[2])
+    return index
 
 
 def sample_pairs(n_events, n_pairs):
