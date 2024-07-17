@@ -262,7 +262,7 @@ def plot_roc_curve(fpr_dict, tpr_dict, auc_dict, title):
         fpr = fpr_dict[key]
         tpr = tpr_dict[key]
         auc_roc = auc_dict[key]
-        plt.plot(fpr, tpr, label='Lambda = {} (AUC = {:.2f})'.format(key, auc_roc))
+        plt.plot(fpr, tpr, label='{} (AUC = {:.2f})'.format(key, auc_roc))
     # plt.plot(fpr, tpr, 'k--', label='ROC (area = {0:.2f})'.format(auc_roc), lw=2)    
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
