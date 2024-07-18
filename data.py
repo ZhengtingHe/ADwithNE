@@ -53,6 +53,30 @@ def select_events(events, criteria):
     index = (count_elctron == criteria[0]) & (count_muon == criteria[1]) & (count_jet == criteria[2])
     return index
 
+def find_significant_met(events, met_threshold=20):
+    met = events[:,:,3] == 1
+    met_pt = np.where(met, events[:,:,0], 0)
+    return np.any(met_pt > met_threshold, axis=1)
+
+def classify_events(events):
+    high_pt_threshold = 25  
+
+    high_pt_electron = (events[:,:,3] == 2) & (events[:,:,0] > high_pt_threshold)
+    high_pt_muon = (events[:,:,3] == 3) & (events[:,:,0] > high_pt_threshold)
+
+    has_high_pt_electron = np.any(high_pt_electron, axis=1)
+    has_high_pt_muon = np.any(high_pt_muon, axis=1)
+
+    significant_met = find_significant_met(events)
+
+    w_boson_index = (has_high_pt_electron | has_high_pt_muon) & significant_met
+    z_boson_index = select_events(events, [2, 0, 0]) | select_events(events, [0, 2, 0])
+    ttbar_index = (has_high_pt_electron | has_high_pt_muon) & (np.sum(events[:,:,3] == 4, axis=1) >= 2)
+    qcd_multijet_index = (np.sum(events[:,:,3] == 4, axis=1) >= 3) & ~significant_met & ~(has_high_pt_electron | has_high_pt_muon)
+
+
+    return w_boson_index, z_boson_index, ttbar_index, qcd_multijet_index
+
 
 def sample_pairs(n_events, n_pairs):
     # np.random.choice can be extremely slow, use randint instead
