@@ -13,7 +13,8 @@ from utils import load_toml_config
 
 
 def load_config():
-    with open('../config.json', 'r') as f:
+    module_path = os.path.dirname(__file__)
+    with open(os.path.join(module_path, 'config.json'), 'r') as f:
         config = json.load(f)
     return config
 

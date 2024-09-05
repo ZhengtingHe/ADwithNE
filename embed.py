@@ -51,7 +51,7 @@ output_dim = model_hyper_parameters["output_dim"]
 
 embedding_model = ParticleEventTransformer(feature_size, embed_size, num_heads, hidden_dim, output_dim, num_layers)
 model_name = "emb_dim{}_type_scale{}.pt".format(output_dim, particle_type_scale) if EMD_config['pid_method'] == 'one-hot' else "emb_dim{}_sep.pt".format(output_dim)
-embedding_model.load_state_dict(torch.load(os.path.join("model", model_name)))
+embedding_model.load_state_dict(torch.load(os.path.join(database_path, "model", model_name)))
 embedding_model.to(device)
 
 infer_test_num = 1000000
@@ -71,6 +71,9 @@ for key, value in dataloaders.items():
 # Save embedding points in HDF5 file
 import h5py
 
-with h5py.File("embedding_points.h5", "w") as f:
+embedding_points_file_name = "embedding_points_dim{}.h5".format(output_dim)
+embedding_points_file = os.path.join(database_path, embedding_points_file_name)
+with h5py.File(embedding_points_file, "w") as f:
     for key, value in embedding_points.items():
         f.create_dataset(key, data=value)
+print("Embedding points saved as:", embedding_points_file)
