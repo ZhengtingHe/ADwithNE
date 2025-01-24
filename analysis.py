@@ -6,6 +6,8 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn import metrics
 from scipy.optimize import curve_fit
 from utils import load_toml_config
+from scipy import stats
+import pp
 
 sys.path.append("..")
 
@@ -234,16 +236,29 @@ class Bootstrap_Permutation:
         # mce_val = mce(self.h_union[rng.randint(0, self.n_union, self.n2)], self.h_union[rng.randint(0, self.n_union, self.m2)], self.pi)
         # return lrt_val, auc_val, mce_val
 
-    def bootstrap(self, n, verbose=True, n_jobs=24):
-        with ProcessPoolExecutor(max_workers=n_jobs) as executor:
-            results = list(tqdm(executor.map(self._bootstrap_iteration, range(n), chunksize=100), total=n, disable=not verbose))
+    def bootstrap(self, n, verbose=True, n_jobs=24, method='count'):
+        # with ProcessPoolExecutor(max_workers=n_jobs) as executor:
+        #     results = list(tqdm(executor.map(self._bootstrap_iteration, range(n), chunksize=100), total=n, disable=not verbose))
 
-        lrt_null, auc_null, mce_null = zip(*results)
+        # lrt_null, auc_null, mce_null = zip(*results)
+
+        job_server = pp.Server()
+        jobs = [job_server.submit(bootstrap_iteration, (seed, self.n_union, self.h_union, self.n2, self.m2, self.pi)) for seed in range(n)]
+        lrt_null, auc_null, mce_null = zip(*[job() for job in jobs])
 
         # P-value
-        lrt_p = np.mean(lrt_null > self.lrt_exp) if self.lrt_exp > np.mean(lrt_null) else np.mean(lrt_null < self.lrt_exp)
-        auc_p = np.mean(auc_null > self.auc_exp) if self.auc_exp > np.mean(auc_null) else np.mean(auc_null < self.auc_exp)
-        mce_p = np.mean(mce_null > self.mce_exp) if self.mce_exp > np.mean(mce_null) else np.mean(mce_null < self.mce_exp)
+        if method == 'count':
+            lrt_p = np.mean(lrt_null > self.lrt_exp) if self.lrt_exp > np.mean(lrt_null) else np.mean(lrt_null < self.lrt_exp)
+            auc_p = np.mean(auc_null > self.auc_exp) if self.auc_exp > np.mean(auc_null) else np.mean(auc_null < self.auc_exp)
+            mce_p = np.mean(mce_null > self.mce_exp) if self.mce_exp > np.mean(mce_null) else np.mean(mce_null < self.mce_exp)
+        elif method == 'fit':
+            lrt_mean, lrt_std = stats.norm.fit(lrt_null)
+            auc_mean, auc_std = stats.norm.fit(auc_null)
+            mce_mean, mce_std = stats.norm.fit(mce_null)
+            # Double sided
+            lrt_p = min(stats.norm.cdf(self.lrt_exp, lrt_mean, lrt_std), 1 - stats.norm.cdf(self.lrt_exp, lrt_mean, lrt_std))
+            auc_p = min(stats.norm.cdf(self.auc_exp, auc_mean, auc_std), 1 - stats.norm.cdf(self.auc_exp, auc_mean, auc_std))
+            mce_p = min(stats.norm.cdf(self.mce_exp, mce_mean, mce_std), 1 - stats.norm.cdf(self.mce_exp, mce_mean, mce_std))
 
         self.lrt_p_bootstrap = lrt_p
         self.auc_p_bootstrap = auc_p
@@ -260,16 +275,30 @@ class Bootstrap_Permutation:
         mce_val = mce(h_perm[:self.n2], h_perm[self.n2:], self.pi)
         return lrt_val, auc_val, mce_val
 
-    def permutation(self, n, verbose=True, n_jobs=24):
-        with ProcessPoolExecutor(max_workers=n_jobs) as executor:
-            results = list(tqdm(executor.map(self._permutation_iteration, range(n), chunksize=100), total=n, disable=not verbose))
+    def permutation(self, n, verbose=True, n_jobs=24, method='count'):
+        # with ProcessPoolExecutor(max_workers=n_jobs) as executor:
+        #     results = list(tqdm(executor.map(self._permutation_iteration, range(n), chunksize=100), total=n, disable=not verbose))
 
-        lrt_null, auc_null, mce_null = zip(*results)
+        # lrt_null, auc_null, mce_null = zip(*results)
+
+
+        job_server = pp.Server()
+        jobs = [job_server.submit(permutation_iteration, (seed, self.n_union, self.h_union, self.n2, self.pi)) for seed in range(n)]
+        lrt_null, auc_null, mce_null = zip(*[job() for job in jobs])
 
         # P-value
-        lrt_p = np.mean(lrt_null > self.lrt_exp) if self.lrt_exp > np.mean(lrt_null) else np.mean(lrt_null < self.lrt_exp)
-        auc_p = np.mean(auc_null > self.auc_exp) if self.auc_exp > np.mean(auc_null) else np.mean(auc_null < self.auc_exp)
-        mce_p = np.mean(mce_null > self.mce_exp) if self.mce_exp > np.mean(mce_null) else np.mean(mce_null < self.mce_exp)
+        if method == 'count':
+            lrt_p = np.mean(lrt_null > self.lrt_exp) if self.lrt_exp > np.mean(lrt_null) else np.mean(lrt_null < self.lrt_exp)
+            auc_p = np.mean(auc_null > self.auc_exp) if self.auc_exp > np.mean(auc_null) else np.mean(auc_null < self.auc_exp)
+            mce_p = np.mean(mce_null > self.mce_exp) if self.mce_exp > np.mean(mce_null) else np.mean(mce_null < self.mce_exp)
+        elif method == 'fit':
+            lrt_mean, lrt_std = stats.norm.fit(lrt_null)
+            auc_mean, auc_std = stats.norm.fit(auc_null)
+            mce_mean, mce_std = stats.norm.fit(mce_null)
+            # Double sided
+            lrt_p = min(stats.norm.cdf(self.lrt_exp, lrt_mean, lrt_std), 1 - stats.norm.cdf(self.lrt_exp, lrt_mean, lrt_std))
+            auc_p = min(stats.norm.cdf(self.auc_exp, auc_mean, auc_std), 1 - stats.norm.cdf(self.auc_exp, auc_mean, auc_std))
+            mce_p = min(stats.norm.cdf(self.mce_exp, mce_mean, mce_std), 1 - stats.norm.cdf(self.mce_exp, mce_mean, mce_std))
 
         self.lrt_p_permutation = lrt_p
         self.auc_p_permutation = auc_p
@@ -317,3 +346,21 @@ class LambdaEstimator:
         self.estimated_lambda = 1 - poisson(1, self.beta0, self.beta1)
         return self.estimated_lambda
 
+# Iteration function for pp
+def bootstrap_iteration(seed, n_union, h_union, n2, m2, pi):
+    rng = np.random.default_rng(seed)
+    idxs = rng.integers(0, n_union, n2 + m2)
+    h_union_sample = h_union[idxs]
+    lrt_val = lrt(h_union_sample[:n2], pi)
+    auc_val = auc(h_union_sample[:n2], h_union_sample[n2:])
+    mce_val = mce(h_union_sample[:n2], h_union_sample[n2:], pi)
+    return lrt_val, auc_val, mce_val
+
+def permutation_iteration(seed, n_union, h_union, n2, pi):
+    rng = np.random.default_rng(seed)
+    perm_indices = rng.permutation(n_union)
+    h_perm = h_union[perm_indices]
+    lrt_val = lrt(h_perm[:n2], pi)
+    auc_val = auc(h_perm[:n2], h_perm[n2:])
+    mce_val = mce(h_perm[:n2], h_perm[n2:], pi)
+    return lrt_val, auc_val, mce_val

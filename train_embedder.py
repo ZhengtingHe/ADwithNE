@@ -51,7 +51,13 @@ print("Database path:", database_path)
 # SM processes
 EMD_config = load_toml_config("EMD")
 particle_type_scale = EMD_config['particle_type_scale']
-bkg = read_h5_file(database_path, bkg_files[0]['file'])
+
+# bkg = read_h5_file(database_path, bkg_files[0]['file'])
+Delphes = np.load('../data/datasets_-1.npz')
+unpreprocessed_labels = ['x_train','x_test', 'x_val']
+full_SM_dataset = np.concatenate([Delphes[label] for label in unpreprocessed_labels], axis=0)
+bkg = full_SM_dataset.reshape(full_SM_dataset.shape[:3])
+
 print("BKG events loaded")
 emb_path = os.path.join(database_path, "generated_data")
 if EMD_config['pid_method'] == 'one-hot':

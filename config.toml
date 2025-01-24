@@ -1,7 +1,7 @@
 [data_path]
 windows = "D:\\ADwithAE"
-# linux = "/home/desmondhe/Windows_D/ADwithAE"
-linux = "/eos/user/z/zhengtin/ADwithNE"
+linux = "/home/desmondhe/Windows_D/ADwithAE"
+# linux = "/eos/user/z/zhengtin/ADwithNE"
 
 [file]
 SM = "background_for_training.h5"
@@ -24,7 +24,7 @@ embed_size = 16
 num_heads = 8
 num_layers = 4
 hidden_dim = 256
-output_dim = 16
+output_dim = 2
 
 [train]
 num_workers = 8

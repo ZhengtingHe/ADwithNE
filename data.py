@@ -54,6 +54,25 @@ def select_events(events, criteria):
     index = (count_elctron == criteria[0]) & (count_muon == criteria[1]) & (count_jet == criteria[2])
     return index
 
+def mark_events(events):
+    n_MET = 1
+    n_e = 4
+    n_mu = 4
+    n_jet = 10
+    particle_list  = np.concatenate((np.ones(n_MET)*1, np.ones(n_e)*2, np.ones(n_mu)*3, np.ones(n_jet)*4))
+    num_particles = 19
+    marked_events = np.zeros((events.shape[0], num_particles, 4))
+    if len(events.shape) == 2:
+        event = events
+        labels = (np.ones(num_particles)*event[:,0]!=0).astype(int)*particle_list
+        marked_events = np.concatenate((event, labels.reshape(-1,1)), axis=1)
+    else:
+        for i in range(events.shape[0]):
+            event = events[i]
+            labels = (np.ones(num_particles)*event[:,0]!=0).astype(int)*particle_list
+            marked_events[i] = np.concatenate((event, labels.reshape(-1,1)), axis=1)
+    return marked_events
+
 def find_significant_met(events, met_threshold=20):
     met = events[:,:,3] == 1
     met_pt = np.where(met, events[:,:,0], 0)

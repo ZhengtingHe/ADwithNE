@@ -162,3 +162,8 @@ demo/checkpoint.pt
 model/*
 generated_data/*
 embedding_points.h5
+latent/embedding_points*
+data/ADC_Delphes_original_divisions.hdf5
+data/ADC_Delphes_signals.hdf5
+data/background_IDs_-1.npz
+data/datasets_-1.npz

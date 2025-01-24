@@ -16,6 +16,7 @@ from utils import load_toml_config
 import matplotlib.pyplot as plt
 from analysis import inference
 from data import EventDataset
+main_folder = os.path.dirname(__file__)
 
 
 device = "cuda" if torch.cuda.is_available() else "mps" if sys.platform == "darwin" else "cpu"
@@ -33,7 +34,12 @@ database_path = get_database_path()
 events = {}
 for key, value in files.items():
     events[key] = read_h5_file(database_path, value)
-    print(key, events[key].shape)
+
+Delphes = np.load(os.path.join(main_folder, 'data', 'datasets_-1.npz'))
+unpreprocessed_labels = ['x_train','x_test', 'x_val']
+full_SM_dataset = np.concatenate([Delphes[label] for label in unpreprocessed_labels], axis=0)
+events['SM'] = full_SM_dataset.reshape(full_SM_dataset.shape[:3])
+
 
 signals = [key for key in events.keys() if key != "SM"]
 print(signals)
@@ -51,7 +57,7 @@ output_dim = model_hyper_parameters["output_dim"]
 
 embedding_model = ParticleEventTransformer(feature_size, embed_size, num_heads, hidden_dim, output_dim, num_layers)
 model_name = "emb_dim{}_type_scale{}.pt".format(output_dim, particle_type_scale) if EMD_config['pid_method'] == 'one-hot' else "emb_dim{}_sep.pt".format(output_dim)
-embedding_model.load_state_dict(torch.load(os.path.join(database_path, "model", model_name)))
+embedding_model.load_state_dict(torch.load(os.path.join(main_folder, "model", model_name)))
 embedding_model.to(device)
 
 infer_test_num = 1000000
@@ -72,7 +78,8 @@ for key, value in dataloaders.items():
 import h5py
 
 embedding_points_file_name = "embedding_points_dim{}.h5".format(output_dim)
-embedding_points_file = os.path.join(database_path, embedding_points_file_name)
+
+embedding_points_file = os.path.join(main_folder, 'latent', embedding_points_file_name)
 with h5py.File(embedding_points_file, "w") as f:
     for key, value in embedding_points.items():
         f.create_dataset(key, data=value)
